@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AccesClass — Vista estudiante</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 60px auto; padding: 20px; }
+    h1 { color: #1F4E79; }
+    #status { color: #888; font-size: 14px; margin-bottom: 10px; }
+    #texto { background: #E1F5EE; border: 2px solid #5DCAA5; border-radius: 10px; padding: 20px; min-height: 120px; font-size: 24px; color: #04342C; }
+  </style>
+</head>
+<body>
+  <h1>AccesClass</h1>
+  <p>Lo que dice el coordinador aparece aquí en tiempo real.</p>
+  <div id="status">Conectando...</div>
+  <div id="texto">Esperando al coordinador...</div>
+
+  <script>
+    const texto = document.getElementById('texto');
+    const status = document.getElementById('status');
+
+    const socket = new WebSocket("ws://localhost:8000/ws");
+
+    socket.onopen = () => {
+      status.textContent = '🟢 Conectado';
+    };
+
+    socket.onmessage = (event) => {
+      texto.textContent = event.data;
+    };
+
+    socket.onclose = () => {
+      status.textContent = '🔴 Desconectado';
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AccesClass — Prueba de voz</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 60px auto; padding: 20px; }
+    h1 { color: #1F4E79; }
+    #status { color: #888; font-size: 14px; margin-bottom: 10px; }
+    #texto { background: #f0f4f8; border-radius: 10px; padding: 20px; min-height: 100px; font-size: 20px; color: #222; }
+    button { margin-top: 20px; padding: 12px 28px; background: #1F4E79; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #2E75B6; }
+  </style>
+</head>
+<body>
+  <h1>AccesClass</h1>
+  <p>El coordinador habla → el estudiante sordo lee el texto en pantalla.</p>
+  <div id="status">Listo para escuchar</div>
+  <div id="texto">Aquí aparecerá lo que digas...</div>
+  <button onclick="iniciar()">🎙️ Hablar</button>
+  <button onclick="detener()" style="background:#c0392b;">⏹ Detener</button>
+
+  <script>
+    const texto = document.getElementById('texto');
+const status = document.getElementById('status');
+let reconocedor;
+let socket = new WebSocket("ws://localhost:8000/ws");
+
+function iniciar() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Usa Chrome.');
+    return;
+  }
+  reconocedor = new SpeechRecognition();
+  reconocedor.lang = 'es-CL';
+  reconocedor.continuous = true;
+  reconocedor.interimResults = true;
+
+  reconocedor.onstart = () => status.textContent = '🔴 Escuchando...';
+  reconocedor.onend = () => status.textContent = 'Listo para escuchar';
+
+  reconocedor.onresult = (event) => {
+    let transcripcion = '';
+    for (let i = 0; i < event.results.length; i++) {
+      transcripcion += event.results[i][0].transcript;
+    }
+    texto.textContent = transcripcion;
+    // Envía el texto al servidor
+    socket.send(transcripcion);
+  };
+
+  reconocedor.start();
+}
+
+function detener() {
+  if (reconocedor) reconocedor.stop();
+}
+  </script>
+</body>
+</html>
