@@ -1,6 +1,11 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from app.core.database import engine, Base
+from app.models import models
+
+# Crea las tablas si no existen
+Base.metadata.create_all(bind=engine)
 import json
 
 app = FastAPI(title="AccesClass")
