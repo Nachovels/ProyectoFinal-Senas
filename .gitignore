@@ -1,0 +1,11 @@
+Producto/backend/venv/
+
+# Ignorar logs de entrenamiento
+Producto/backend/ml_pipeline/Logs/
+
+# Ignorar datasets locales
+Producto/backend/ml_pipeline/dataset_sequences/
+Producto/backend/ml_pipeline/dataset_static/
+
+# (Opcional) Ignorar modelos pesados si pesan muchos MBs
+*.h5
