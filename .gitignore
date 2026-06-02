@@ -8,4 +8,4 @@ Producto/backend/ml_pipeline/dataset_sequences/
 Producto/backend/ml_pipeline/dataset_static/
 
 # (Opcional) Ignorar modelos pesados si pesan muchos MBs
-*.h5
+# *.h5

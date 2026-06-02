@@ -1,7 +1,7 @@
+import os
 import cv2
 import numpy as np
 import mediapipe as mp
-import os
 from tensorflow.keras.models import load_model
 
 mp_holistic = mp.solutions.holistic
@@ -49,24 +49,36 @@ def normalize_features(frame_data):
             new_data[i] -= nose_x
             new_data[i+1] -= nose_y
             new_data[i+2] -= nose_z
+        max_val = np.max(np.abs(new_data[0:132]))
+        if max_val > 0: new_data[0:132] = new_data[0:132] / max_val
+            
     if np.any(new_data[132:276]):
         ref_x, ref_y, ref_z = new_data[132], new_data[133], new_data[134]
         for i in range(132, 276, 3):
             new_data[i] -= ref_x
             new_data[i+1] -= ref_y
             new_data[i+2] -= ref_z
+        max_val = np.max(np.abs(new_data[132:276]))
+        if max_val > 0: new_data[132:276] = new_data[132:276] / max_val
+            
     if np.any(new_data[276:339]):
         wrist_x, wrist_y, wrist_z = new_data[276], new_data[277], new_data[278]
         for i in range(276, 339, 3):
             new_data[i] -= wrist_x
             new_data[i+1] -= wrist_y
             new_data[i+2] -= wrist_z
+        max_val = np.max(np.abs(new_data[276:339]))
+        if max_val > 0: new_data[276:339] = new_data[276:339] / max_val
+            
     if np.any(new_data[339:402]):
         wrist_x, wrist_y, wrist_z = new_data[339], new_data[340], new_data[341]
         for i in range(339, 402, 3):
             new_data[i] -= wrist_x
             new_data[i+1] -= wrist_y
             new_data[i+2] -= wrist_z
+        max_val = np.max(np.abs(new_data[339:402]))
+        if max_val > 0: new_data[339:402] = new_data[339:402] / max_val
+        
     return new_data
 
 DATA_PATH = os.path.join('dataset_sequences')
@@ -114,7 +126,7 @@ def test_model():
                 cv2.putText(image, 'ESPERANDO MANO...', (15,35), 
                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
 
-            cv2.imshow('Traductor V2.1 Prof.', image)
+            cv2.imshow('Traductor lengua de señas', image)
             if cv2.waitKey(10) & 0xFF == ord('q'): break
         cap.release(); cv2.destroyAllWindows()
 
