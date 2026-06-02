@@ -58,11 +58,11 @@ def get_next_sequence_number(letter_path):
 
 def collect_data():
     while True:
-        raw_input = input("¿Qué gesto quieres recolectar (V2.1)? (Nombre o 'salir'): ").strip().upper()
+        raw_input = input("Gesto a recolectar (Gesto o 'salir' para terminar): ").strip().upper()
         if raw_input == 'SALIR': break
         
         letter = raw_input.replace(" ", "_").replace("¿", "").replace("?", "").replace("¡", "").replace("!", "")
-        letter = letter.replace("Á", "A").replace("É", "E").replace("Í", "I").replace("Ó", "O").replace("Ú", "U").replace("Ñ", "N")
+        letter = letter.replace("Á", "A").replace("É", "E").replace("Í", "I").replace("Ó", "O").replace("Ú", "U")
         
         letter_path = os.path.join(DATA_PATH, letter)
         os.makedirs(letter_path, exist_ok=True)
@@ -75,8 +75,8 @@ def collect_data():
                     image, results = mediapipe_detection(frame, holistic)
                     draw_styled_landmarks(image, results)
                     cv2.putText(image, f'LETRA: {letter} | VIDEO: {sequence}', (15,30), 2, 0.7, (0,255,0), 2)
-                    cv2.putText(image, 'Presiona "s" para grabar (1 seg)', (15,60), 2, 0.6, (255,255,255), 1)
-                    cv2.imshow('Recolector 2.1', image)
+                    cv2.putText(image, '"S" para grabar (1 seg)', (15,60), 2, 0.6, (255,255,255), 1)
+                    cv2.imshow('Recolector data', image)
                     key = cv2.waitKey(10)
                     if key & 0xFF == ord('s'): break
                     if key & 0xFF == ord('q'): 
@@ -86,7 +86,7 @@ def collect_data():
                     image, results = mediapipe_detection(frame, holistic)
                     draw_styled_landmarks(image, results)
                     cv2.putText(image, f'GRABANDO {letter} - {frame_num}/30', (15,30), 2, 1, (0,0,255), 2)
-                    cv2.imshow('Recolector 2.1', image)
+                    cv2.imshow('Recolector data', image)
                     keypoints = extract_keypoints(results)
                     seq_path = os.path.join(letter_path, str(sequence))
                     os.makedirs(seq_path, exist_ok=True)

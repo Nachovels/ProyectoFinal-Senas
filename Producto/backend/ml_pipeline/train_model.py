@@ -14,33 +14,57 @@ label_map = {label:num for num, label in enumerate(letters)}
 def normalize_features(frame_data):
     new_data = frame_data.copy()
     
+    # 1. Pose (0-131)
     if np.any(new_data[0:132]):
         nose_x, nose_y, nose_z = new_data[0], new_data[1], new_data[2]
+        # Centrar
         for i in range(0, 132, 4):
             new_data[i] -= nose_x
             new_data[i+1] -= nose_y
             new_data[i+2] -= nose_z
+        # Escalar
+        max_val = np.max(np.abs(new_data[0:132]))
+        if max_val > 0:
+            new_data[0:132] = new_data[0:132] / max_val
             
+    # 2. Face (132-275)
     if np.any(new_data[132:276]):
         ref_x, ref_y, ref_z = new_data[132], new_data[133], new_data[134]
+        # Centrar
         for i in range(132, 276, 3):
             new_data[i] -= ref_x
             new_data[i+1] -= ref_y
             new_data[i+2] -= ref_z
+        # Escalar
+        max_val = np.max(np.abs(new_data[132:276]))
+        if max_val > 0:
+            new_data[132:276] = new_data[132:276] / max_val
             
+    # 3. Mano Izquierda (276-338)
     if np.any(new_data[276:339]):
         wrist_x, wrist_y, wrist_z = new_data[276], new_data[277], new_data[278]
+        # Centrar
         for i in range(276, 339, 3):
             new_data[i] -= wrist_x
             new_data[i+1] -= wrist_y
             new_data[i+2] -= wrist_z
+        # Escalar
+        max_val = np.max(np.abs(new_data[276:339]))
+        if max_val > 0:
+            new_data[276:339] = new_data[276:339] / max_val
             
+    # 4. Mano Derecha (339-401)
     if np.any(new_data[339:402]):
         wrist_x, wrist_y, wrist_z = new_data[339], new_data[340], new_data[341]
+        # Centrar
         for i in range(339, 402, 3):
             new_data[i] -= wrist_x
             new_data[i+1] -= wrist_y
             new_data[i+2] -= wrist_z
+        # Escalar
+        max_val = np.max(np.abs(new_data[339:402]))
+        if max_val > 0:
+            new_data[339:402] = new_data[339:402] / max_val
             
     return new_data
 
@@ -58,7 +82,8 @@ def load_data():
                 window.append(res)
             sequences.append(window)
             labels.append(label_map[letter])
-    return np.array(sequences), np.array(labels)
+    
+    return np.array(sequences, dtype=np.float32), np.array(labels)
 
 def train():
     print("Cargando datos...")
@@ -69,7 +94,7 @@ def train():
     
     print("Entrenando Modelo Optimizado...")
     model = Sequential()
-    # Usamos tanh (estándar para LSTM) y reducimos unidades
+
     model.add(LSTM(64, return_sequences=True, activation='tanh', input_shape=(30,402)))
     model.add(BatchNormalization())
     model.add(Dropout(0.2))
@@ -90,7 +115,7 @@ def train():
     
     early_stopping = EarlyStopping(monitor='val_loss', patience=50, restore_best_weights=True)
     
-    model.fit(X_train, y_train, epochs=500, validation_data=(X_test, y_test), callbacks=[early_stopping])
+    model.fit(X_train, y_train, epochs=500, batch_size=8, validation_data=(X_test, y_test), callbacks=[early_stopping])
     
     model.save('alphabet_lstm_model.h5')
     print("Modelo guardado exitosamente.")
