@@ -21,6 +21,7 @@ class Sesion(Base):
     id = Column(Integer, primary_key=True, index=True)
     coordinador_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     estudiante_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    codigo = Column(String(6), unique=True, nullable=True)
     iniciada_en = Column(TIMESTAMP, server_default=func.now())
     finalizada_en = Column(TIMESTAMP, nullable=True)
 

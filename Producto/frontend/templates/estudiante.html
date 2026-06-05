@@ -28,6 +28,20 @@
     .status-pill span { font-size: 12px; color: var(--success); font-weight: 500; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
+    /* PANTALLA UNIRSE */
+    .unirse-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 60px); padding: 24px; }
+    .unirse-card { background: white; border-radius: var(--radius); padding: 32px 24px; width: 100%; box-shadow: var(--shadow); text-align: center; }
+    .unirse-icon { font-size: 48px; margin-bottom: 16px; }
+    .unirse-title { font-size: 20px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+    .unirse-desc { font-size: 14px; color: var(--gray-text); line-height: 1.5; margin-bottom: 24px; }
+    .codigo-input { width: 100%; border: 2px solid var(--gray-border); border-radius: var(--radius-sm); padding: 16px; font-size: 28px; font-weight: 700; font-family: 'DM Mono'; color: var(--navy); text-align: center; letter-spacing: 0.2em; outline: none; text-transform: uppercase; transition: border-color 0.2s; margin-bottom: 12px; }
+    .codigo-input:focus { border-color: var(--blue); }
+    .btn-unirse { width: 100%; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; transition: background 0.2s; }
+    .btn-unirse:hover { background: var(--navy-mid); }
+    .btn-unirse:disabled { opacity: 0.6; cursor: not-allowed; }
+    .error-msg { background: #FEE2E2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--danger); margin-top: 12px; display: none; }
+
+    /* CONTENIDO PRINCIPAL */
     .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(var(--tab-height) + 16px); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -35,10 +49,8 @@
     .cam-card { background: var(--navy); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
     .cam-frame { aspect-ratio: 4/3; background: #070F1E; display: flex; align-items: center; justify-content: center; position: relative; }
     .cam-corner { position: absolute; width: 20px; height: 20px; border-color: var(--teal-light); border-style: solid; opacity: 0.6; }
-    .cam-corner.tl { top:12px; left:12px; border-width:2px 0 0 2px; }
-    .cam-corner.tr { top:12px; right:12px; border-width:2px 2px 0 0; }
-    .cam-corner.bl { bottom:12px; left:12px; border-width:0 0 2px 2px; }
-    .cam-corner.br { bottom:12px; right:12px; border-width:0 2px 2px 0; }
+    .cam-corner.tl{top:12px;left:12px;border-width:2px 0 0 2px} .cam-corner.tr{top:12px;right:12px;border-width:2px 2px 0 0}
+    .cam-corner.bl{bottom:12px;left:12px;border-width:0 0 2px 2px} .cam-corner.br{bottom:12px;right:12px;border-width:0 2px 2px 0}
     .cam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     .cam-icon { font-size: 40px; opacity: 0.25; }
     .cam-text { font-size: 12px; color: rgba(255,255,255,0.3); font-family: 'DM Mono'; }
@@ -86,12 +98,12 @@
     .btn-secondary { background: var(--teal-bg); color: var(--teal); border: 1.5px solid var(--teal-border); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; }
 
     .historial-sesion { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
-    .historial-header { background: var(--gray-bg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-border); }
+    .historial-header { background: var(--gray-bg); padding: 12px 16px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--gray-border); }
     .historial-fecha { font-size: 13px; font-weight: 600; color: var(--navy); }
     .historial-duracion { font-size: 12px; color: var(--gray-muted); font-family: 'DM Mono'; }
     .historial-body { padding: 12px; display: flex; flex-direction: column; gap: 6px; }
     .historial-msg { font-size: 13px; padding: 7px 11px; border-radius: 8px; }
-    .historial-msg.voz { background: var(--navy); color: white; align-self: flex-end; max-width: 85%; margin-left: auto; }
+    .historial-msg.voz { background: var(--navy); color: white; margin-left: auto; max-width: 85%; }
     .historial-msg.texto { background: var(--teal-bg); color: #064E3B; border: 1px solid var(--teal-border); max-width: 85%; }
     .historial-msg.frase_rapida { background: #F1F5F9; color: var(--text); border: 1px solid var(--gray-border); max-width: 85%; }
     .historial-hora { font-size: 10px; opacity: 0.55; margin-bottom: 2px; }
@@ -107,134 +119,206 @@
   </style>
 </head>
 <body>
+
   <div class="topbar">
     <div>
       <div class="topbar-title">SpeakingHands</div>
-      <div class="topbar-sub">Vista del estudiante</div>
+      <div class="topbar-sub" id="topbar-sub">Vista del estudiante</div>
     </div>
-    <div class="status-pill">
+    <div class="status-pill" id="status-pill" style="display:none">
       <div class="dot"></div>
-      <span id="statusText">Conectando...</span>
+      <span id="statusText">Conectado</span>
     </div>
   </div>
 
-  <div class="content">
-    <!-- SEÑAS -->
-    <div class="tab-content active" id="tab-senas">
-      <div class="cam-card">
-        <div class="cam-frame">
-          <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
-          <div class="cam-corner bl"></div><div class="cam-corner br"></div>
-          <div class="cam-placeholder">
-            <div class="cam-icon">✋</div>
-            <div class="cam-text">Módulo IA — en desarrollo</div>
+  <!-- PANTALLA UNIRSE -->
+  <div class="unirse-screen" id="unirse-screen">
+    <div class="unirse-card">
+      <div class="unirse-icon">✋</div>
+      <div class="unirse-title">Unirse a una reunión</div>
+      <div class="unirse-desc">Ingresa el código de 6 caracteres que te compartió el coordinador.</div>
+      <input class="codigo-input" type="text" id="codigo-input" maxlength="6" placeholder="ABC123" autocomplete="off">
+      <button class="btn-unirse" id="btn-unirse" onclick="unirseASala()">Unirse →</button>
+      <div class="error-msg" id="error-msg">Código inválido o sesión no encontrada.</div>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div style="display:none" id="main-content">
+    <div class="content">
+      <!-- SEÑAS -->
+      <div class="tab-content active" id="tab-senas">
+        <div class="cam-card">
+          <div class="cam-frame">
+            <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+            <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+            <div class="cam-placeholder">
+              <div class="cam-icon">✋</div>
+              <div class="cam-text">Módulo IA — en desarrollo</div>
+            </div>
+          </div>
+          <div class="cam-bottom">
+            <div class="cam-label">Detección MediaPipe</div>
+            <button class="cam-btn">Próximamente</button>
           </div>
         </div>
-        <div class="cam-bottom">
-          <div class="cam-label">Detección MediaPipe</div>
-          <button class="cam-btn">Próximamente</button>
+        <div class="detected-card">
+          <div class="detected-label">Traducción IA</div>
+          <div class="detected-text" id="senaDetectada">Esperando señas...</div>
+        </div>
+        <div class="chat-box">
+          <div class="chat-box-header">
+            <div class="dot"></div>
+            <div class="chat-box-title">El coordinador dice:</div>
+            <div class="chat-box-sub" id="chat-hora">—</div>
+          </div>
+          <div class="chat-messages" id="chat-messages-senas">
+            <div class="chat-empty-msg">Esperando al coordinador...</div>
+          </div>
         </div>
       </div>
-      <div class="detected-card">
-        <div class="detected-label">Traducción IA</div>
-        <div class="detected-text" id="senaDetectada">Esperando señas...</div>
+
+      <!-- FRASES -->
+      <div class="tab-content" id="tab-frases">
+        <div class="frases-section">
+          <div class="frases-section-label">
+            Estudiante → Coordinador
+            <span class="badge" style="background:#EFF6FF;color:#2563EB">toca para hablar</span>
+          </div>
+          <div class="frases-grid" id="frases-est"></div>
+        </div>
+        <div class="frases-section">
+          <div class="frases-section-label" style="color:#6366F1">
+            Coordinador → Estudiante
+            <span class="badge" style="background:#EEF2FF;color:#6366F1">mostrar pantalla</span>
+          </div>
+          <div class="frases-grid" id="frases-coord"></div>
+        </div>
       </div>
-      <div class="chat-box">
-        <div class="chat-box-header">
-          <div class="dot"></div>
-          <div class="chat-box-title">El coordinador dice:</div>
-          <div class="chat-box-sub" id="chat-hora">—</div>
+
+      <!-- ESCRIBIR -->
+      <div class="tab-content" id="tab-escribir">
+        <div class="chat-box" style="margin-bottom:12px">
+          <div class="chat-box-header">
+            <div class="dot"></div>
+            <div class="chat-box-title">Conversación</div>
+          </div>
+          <div class="chat-messages" id="chat-messages-escribir">
+            <div class="chat-empty-msg">La conversación aparecerá aquí</div>
+          </div>
         </div>
-        <div class="chat-messages" id="chat-messages-senas">
-          <div class="chat-empty-msg">Esperando al coordinador...</div>
+        <div class="escribir-card">
+          <div class="escribir-label">Tu respuesta</div>
+          <textarea id="mi-respuesta" placeholder="Escribe aquí tu mensaje..."></textarea>
+          <div class="btn-row">
+            <button class="btn-primary" onclick="enviarEscrito()">📤 Enviar</button>
+            <button class="btn-secondary" onclick="leerEscrito()">🔊 Leer</button>
+          </div>
         </div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div class="tab-content" id="tab-historial">
+        <div id="historial-container"><div class="loading">Cargando...</div></div>
       </div>
     </div>
 
-    <!-- FRASES -->
-    <div class="tab-content" id="tab-frases">
-      <div class="frases-section">
-        <div class="frases-section-label">
-          Estudiante → Coordinador
-          <span class="badge" style="background:#EFF6FF;color:#2563EB">toca para hablar</span>
-        </div>
-        <div class="frases-grid" id="frases-est"></div>
-      </div>
-      <div class="frases-section">
-        <div class="frases-section-label" style="color:#6366F1">
-          Coordinador → Estudiante
-          <span class="badge" style="background:#EEF2FF;color:#6366F1">mostrar pantalla</span>
-        </div>
-        <div class="frases-grid" id="frases-coord"></div>
-      </div>
-    </div>
-
-    <!-- ESCRIBIR -->
-    <div class="tab-content" id="tab-escribir">
-      <div class="chat-box" style="margin-bottom:12px">
-        <div class="chat-box-header">
-          <div class="dot"></div>
-          <div class="chat-box-title">Conversación</div>
-        </div>
-        <div class="chat-messages" id="chat-messages-escribir">
-          <div class="chat-empty-msg">La conversación aparecerá aquí</div>
-        </div>
-      </div>
-      <div class="escribir-card">
-        <div class="escribir-label">Tu respuesta</div>
-        <textarea id="mi-respuesta" placeholder="Escribe aquí tu mensaje..."></textarea>
-        <div class="btn-row">
-          <button class="btn-primary" onclick="enviarEscrito()">📤 Enviar</button>
-          <button class="btn-secondary" onclick="leerEscrito()">🔊 Leer</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- HISTORIAL -->
-    <div class="tab-content" id="tab-historial">
-      <div id="historial-container">
-        <div class="loading">Cargando historial...</div>
-      </div>
-    </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn active" onclick="switchTab('senas',this)">
+        <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34L4 19c-.96-1-.96-2.62 0-3.58A3.15 3.15 0 0 1 6.41 14.5H10v-4"/></svg>
+        Señas
+      </button>
+      <button class="nav-btn" onclick="switchTab('frases',this)">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Frases
+      </button>
+      <button class="nav-btn" onclick="switchTab('escribir',this)">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Escribir
+      </button>
+      <button class="nav-btn" onclick="switchTab('historial',this);cargarHistorial()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Historial
+      </button>
+    </nav>
   </div>
 
-  <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('senas',this)">
-      <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34L4 19c-.96-1-.96-2.62 0-3.58A3.15 3.15 0 0 1 6.41 14.5H10v-4"/></svg>
-      Señas
-    </button>
-    <button class="nav-btn" onclick="switchTab('frases',this)">
-      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Frases
-    </button>
-    <button class="nav-btn" onclick="switchTab('escribir',this)">
-      <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Escribir
-    </button>
-    <button class="nav-btn" onclick="switchTab('historial',this);cargarHistorial()">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Historial
-    </button>
-  </nav>
-
   <script>
-    const statusText = document.getElementById('statusText');
-    const socket = new WebSocket("ws://localhost:8000/ws/estudiante");
+    let socket = null;
+    let codigoSala = null;
 
-    socket.onopen = () => { statusText.textContent = 'Conectado'; };
-    socket.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      const tipo = msg.tipo === 'voz' ? 'coord' : 'frase';
-      const label = msg.tipo === 'voz' ? 'Coordinador' : 'Frase rápida';
-      agregarMsg(msg.contenido, tipo, label);
-      document.getElementById('chat-hora').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-    };
-    socket.onclose = () => {
-      statusText.textContent = 'Desconectado';
-      document.querySelector('.status-pill .dot').style.background = '#EF4444';
-      statusText.style.color = '#EF4444';
-    };
+    // Auto-mayúsculas en el input
+    document.getElementById('codigo-input').addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+    });
 
+    // ── Unirse a sala ──────────────────────────────────────────
+    async function unirseASala() {
+      const codigo = document.getElementById('codigo-input').value.trim().toUpperCase();
+      if (codigo.length !== 6) {
+        mostrarError('El código debe tener 6 caracteres.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-unirse');
+      const errorMsg = document.getElementById('error-msg');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+      errorMsg.style.display = 'none';
+
+      const res = await fetch(`/api/validar-codigo/${codigo}`);
+      if (!res.ok) {
+        mostrarError('Código inválido o sesión no encontrada.');
+        btn.disabled = false;
+        btn.textContent = 'Unirse →';
+        return;
+      }
+
+      codigoSala = codigo;
+      conectarWebSocket(codigo);
+    }
+
+    function mostrarError(msg) {
+      const e = document.getElementById('error-msg');
+      e.textContent = msg;
+      e.style.display = 'block';
+    }
+
+    function conectarWebSocket(codigo) {
+      socket = new WebSocket(`ws://localhost:8000/ws/estudiante/${codigo}`);
+
+      socket.onopen = () => {
+        // Ocultar pantalla de unirse y mostrar contenido
+        document.getElementById('unirse-screen').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('status-pill').style.display = 'flex';
+        document.getElementById('topbar-sub').textContent = 'Sala: ' + codigo;
+        document.getElementById('btn-unirse').disabled = false;
+        document.getElementById('btn-unirse').textContent = 'Unirse →';
+      };
+
+      socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        const tipo = msg.tipo === 'voz' ? 'coord' : 'frase';
+        const label = msg.tipo === 'voz' ? 'Coordinador' : 'Frase rápida';
+        agregarMsg(msg.contenido, tipo, label);
+        document.getElementById('chat-hora').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+      };
+
+      socket.onclose = (e) => {
+        if (e.code === 4001) {
+          mostrarError('Código inválido o sesión no encontrada.');
+          document.getElementById('btn-unirse').disabled = false;
+          document.getElementById('btn-unirse').textContent = 'Unirse →';
+          return;
+        }
+        document.getElementById('statusText').textContent = 'Desconectado';
+        document.querySelector('.status-pill .dot').style.background = '#EF4444';
+        document.getElementById('statusText').style.color = '#EF4444';
+      };
+    }
+
+    // ── Mensajes ───────────────────────────────────────────────
     function agregarMsg(contenido, tipo, label) {
       ['chat-messages-senas','chat-messages-escribir'].forEach(id => {
         const c = document.getElementById(id);
@@ -255,6 +339,7 @@
       btn.classList.add('active');
     }
 
+    // ── Frases rápidas ─────────────────────────────────────────
     const frasesEst = ["No entendí, ¿puede repetir?","Tengo una pregunta","¿Puede escribirlo?","Entendí, gracias","Necesito ayuda con mi malla","¿Cuándo es el plazo?"];
     const frasesCoord = ["¿Me entiendes?","Espera un momento","Muy bien","Es tu turno"];
 
@@ -262,11 +347,10 @@
       const grid = document.getElementById(id);
       frases.forEach(f => {
         const btn = document.createElement('button');
-        btn.className = 'frase-btn';
-        btn.textContent = f;
+        btn.className = 'frase-btn'; btn.textContent = f;
         btn.onclick = () => {
           hablar(f, btn);
-          if (socket.readyState === 1) socket.send(JSON.stringify({tipo:'frase_rapida',contenido:f}));
+          if (socket && socket.readyState === 1) socket.send(JSON.stringify({tipo:'frase_rapida',contenido:f}));
           agregarMsg(f, 'estudiante', 'Tú (frase rápida)');
         };
         grid.appendChild(btn);
@@ -286,7 +370,7 @@
     function enviarEscrito() {
       const txt = document.getElementById('mi-respuesta').value.trim();
       if (!txt) return;
-      if (socket.readyState === 1) socket.send(JSON.stringify({tipo:'texto',contenido:txt}));
+      if (socket && socket.readyState === 1) socket.send(JSON.stringify({tipo:'texto',contenido:txt}));
       agregarMsg(txt, 'estudiante', 'Tú');
       document.getElementById('mi-respuesta').value = '';
     }
@@ -296,6 +380,7 @@
       if (txt.trim()) hablar(txt, null);
     }
 
+    // ── Historial ──────────────────────────────────────────────
     async function cargarHistorial() {
       const c = document.getElementById('historial-container');
       c.innerHTML = '<div class="loading">Cargando...</div>';
@@ -312,8 +397,7 @@
           div.className = 'historial-sesion';
           const msgs = s.mensajes.map(m =>
             `<div class="historial-msg ${m.tipo}" style="display:flex;flex-direction:column">
-              <div class="historial-hora">${m.hora} — ${m.tipo}</div>
-              ${m.contenido}
+              <div class="historial-hora">${m.hora} — ${m.tipo}</div>${m.contenido}
             </div>`
           ).join('') || '<div style="color:#94A3B8;font-size:13px">Sin mensajes</div>';
           div.innerHTML = `
