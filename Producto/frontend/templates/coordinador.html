@@ -301,6 +301,7 @@
       <div class="topbar-title">SpeakingHands</div>
       <div class="topbar-sub" id="topbar-sub">Vista del coordinador</div>
     </div>
+    <button type="button" class="btn-cerrar-sesion" id="btn-cerrar-sesion" onclick="cerrarSesionCuenta()" title="Cerrar sesión de la cuenta">Cerrar sesión</button>
     <div class="session-pill" onclick="terminarSesion()" id="session-pill" style="display:none">
       <div class="dot"></div>
       <span>Sesión activa</span>
@@ -619,6 +620,17 @@
       return { 'Authorization': 'Bearer ' + sessionStorage.getItem('token') };
     }
 
+    function cerrarSesionCuenta() {
+      try {
+        if (typeof cerrarSesionVoz === 'function') cerrarSesionVoz(true);
+      } catch (_) {}
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        try { socket.close(); } catch (_) {}
+      }
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
+
     function wsUrl(path) {
       const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const token = encodeURIComponent(sessionStorage.getItem('token') || '');
@@ -876,6 +888,7 @@
       document.getElementById('sala-screen').style.display = 'none';
       document.getElementById('main-content').style.display = 'flex';
       document.getElementById('session-pill').style.display = 'flex';
+      Accesibilidad.setPantallaInicial(false);
       document.getElementById('codigo-mini-val').textContent = codigoActual;
       actualizarHeaderSala();
       syncBannerEstudiantes();
@@ -910,6 +923,7 @@
       document.getElementById('main-content').style.display = 'none';
       document.getElementById('sala-screen').style.display = 'flex';
       document.getElementById('session-pill').style.display = 'none';
+      Accesibilidad.setPantallaInicial(true);
 
       document.getElementById('codigo-card').style.display = 'none';
       document.getElementById('btn-entrar').style.display = 'none';

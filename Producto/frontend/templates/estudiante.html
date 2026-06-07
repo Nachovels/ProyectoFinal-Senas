@@ -264,11 +264,12 @@
       <div class="topbar-title">SpeakingHands</div>
       <div class="topbar-sub" id="topbar-sub">Vista del estudiante</div>
     </div>
+    <button type="button" class="btn-cerrar-sesion" id="btn-cerrar-sesion" onclick="cerrarSesionCuenta()" title="Cerrar sesión de la cuenta">Cerrar sesión</button>
     <div class="status-pill" id="status-pill" style="display:none">
       <div class="dot"></div>
       <span id="statusText">Conectado</span>
     </div>
-    <button type="button" class="btn-abandonar-sala" id="btn-abandonar" onclick="abandonarSesion()" title="Salir de la sala">
+    <button type="button" class="btn-abandonar-sala" id="btn-abandonar" onclick="abandonarSesion()" title="Salir de la sala" style="display:none">
       Salir de sala
     </button>
   </div>
@@ -501,6 +502,17 @@
       return { 'Authorization': 'Bearer ' + sessionStorage.getItem('token') };
     }
 
+    function cerrarSesionCuenta() {
+      try {
+        if (window.VozSesion && typeof VozSesion.cerrar === 'function') VozSesion.cerrar();
+      } catch (_) {}
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        try { socket.close(); } catch (_) {}
+      }
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
+
     function wsUrl(path) {
       const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const token = encodeURIComponent(sessionStorage.getItem('token') || '');
@@ -637,6 +649,7 @@
       document.getElementById('main-content').style.display = 'none';
       document.getElementById('unirse-screen').style.display = 'flex';
       document.getElementById('status-pill').style.display = 'none';
+      Accesibilidad.setPantallaInicial(true);
       const btnAbandonar = document.getElementById('btn-abandonar');
       if (btnAbandonar) btnAbandonar.style.display = 'none';
 
@@ -683,6 +696,7 @@
         document.getElementById('unirse-screen').style.display = 'none';
         document.getElementById('main-content').style.display = 'flex';
         document.getElementById('status-pill').style.display = 'flex';
+        Accesibilidad.setPantallaInicial(false);
         const btnAbandonar = document.getElementById('btn-abandonar');
         if (btnAbandonar) btnAbandonar.style.display = 'inline-block';
         document.getElementById('error-msg').style.display = 'none';

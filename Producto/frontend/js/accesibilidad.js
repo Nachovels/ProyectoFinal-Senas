@@ -271,11 +271,14 @@
 
     const sessionPill = topbar.querySelector('.session-pill, .status-pill');
     const btnAbandonar = document.getElementById('btn-abandonar');
+    const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
     if (sessionPill) {
       topbar.insertBefore(wrap, sessionPill);
+      if (btnCerrarSesion) wrap.insertBefore(btnCerrarSesion, wrap.firstChild);
       wrap.appendChild(sessionPill);
       if (btnAbandonar) wrap.appendChild(btnAbandonar);
     } else {
+      if (btnCerrarSesion) wrap.insertBefore(btnCerrarSesion, wrap.firstChild);
       topbar.appendChild(wrap);
     }
 
@@ -321,6 +324,11 @@
     }
   }
 
+  function setPantallaInicial(esInicial) {
+    const btn = document.getElementById('btn-cerrar-sesion');
+    if (btn) btn.style.display = esInicial ? 'inline-flex' : 'none';
+  }
+
   function init(opciones) {
     config = { ...config, ...(opciones || {}) };
     if (config.rol === 'coordinador') config.sonidoHabilitado = true;
@@ -329,10 +337,12 @@
     crearToolbar(topbar);
     aplicarSettings();
     asegurarToastRegion();
+    setPantallaInicial(true);
   }
 
   global.Accesibilidad = {
     init,
+    setPantallaInicial,
     toast,
     confirmarEnvio,
     pulsoMensajeNuevo,

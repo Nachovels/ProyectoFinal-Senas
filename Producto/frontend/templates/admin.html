@@ -685,11 +685,22 @@
     }
 
     async function eliminarUsuario(userId) {
-      if (!confirm('¿Eliminar este usuario?')) return;
-      const res = await fetch(`/api/admin/usuarios/${userId}`, { method: 'DELETE', headers: authHeaders() });
-      const data = await res.json();
-      if (res.ok) { showToast('Usuario eliminado'); cargarUsuarios(); cargarAuditoria(); }
-      else showToast(data.error, true);
+      if (!confirm('¿Eliminar este usuario? Se borrarán también sus salas y mensajes asociados.')) return;
+      try {
+        const res = await fetch(`/api/admin/usuarios/${userId}`, { method: 'DELETE', headers: authHeaders() });
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (res.ok) {
+          showToast('Usuario eliminado');
+          cargarUsuarios();
+          cargarAuditoria();
+          cargarSalas();
+        } else {
+          showToast(data.error || 'No se pudo eliminar el usuario', true);
+        }
+      } catch (_) {
+        showToast('Error de conexión al eliminar el usuario', true);
+      }
     }
 
     document.getElementById('createForm').onsubmit = async (e) => {

@@ -591,6 +591,26 @@ def _eliminar_sesion_db(db: Session, sesion: models.Sesion):
     db.flush()
     _limpiar_sala_memoria(sid)
 
+def _eliminar_usuario_db(db: Session, usuario: models.Usuario):
+    uid = usuario.id
+    sesiones_coord = db.query(models.Sesion).filter_by(coordinador_id=uid).all()
+    for sesion in sesiones_coord:
+        _eliminar_sesion_db(db, sesion)
+    db.query(models.Sesion).filter_by(estudiante_id=uid).update(
+        {models.Sesion.estudiante_id: None}, synchronize_session=False
+    )
+    db.query(models.SesionParticipante).filter_by(usuario_id=uid).delete(synchronize_session=False)
+    db.query(models.Transcripcion).filter_by(usuario_id=uid).delete(synchronize_session=False)
+    db.query(models.Auditoria).filter_by(actor_id=uid).update(
+        {models.Auditoria.actor_id: None}, synchronize_session=False
+    )
+    db.query(models.Auditoria).filter_by(usuario_id=uid).update(
+        {models.Auditoria.usuario_id: None}, synchronize_session=False
+    )
+    db.flush()
+    db.delete(usuario)
+    db.flush()
+
 @app.get("/api/admin/usuarios")
 async def listar_usuarios(admin: dict = Depends(requiere_rol("admin"))):
     db = SessionLocal()
@@ -714,14 +734,26 @@ async def eliminar_usuario(
                     content={"error": "No se puede eliminar al único administrador."},
                 )
 
+        sesiones_activas = db.query(models.Sesion).filter(
+            models.Sesion.coordinador_id == user_id,
+            models.Sesion.finalizada_en.is_(None),
+        ).all()
+        for s in sesiones_activas:
+            await _notificar_sesion_terminada_estudiantes(
+                s.id, "La sesión fue cerrada porque el coordinador fue eliminado."
+            )
+
         registrar_auditoria(
             db, "admin_eliminar_usuario",
             f"Usuario eliminado: {usuario.nombre} ({usuario.email})",
-            actor_id=admin["id"], usuario_id=user_id,
+            actor_id=admin["id"], usuario_id=None,
         )
-        db.delete(usuario)
+        _eliminar_usuario_db(db, usuario)
         db.commit()
         return {"ok": True}
+    except Exception as exc:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"error": f"No se pudo eliminar: {exc}"})
     finally:
         db.close()
 
