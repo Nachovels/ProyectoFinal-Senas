@@ -1,0 +1,329 @@
+/* SpeakingHands — feedback visual y accesible (compartido) */
+
+:root {
+  --font-scale: 1;
+}
+
+body {
+  font-size: calc(16px * var(--font-scale));
+}
+
+.msg,
+.msg-text,
+.frase-btn,
+.compose-input,
+textarea,
+.btn-primary,
+.btn-enviar,
+.chat-box-title,
+.conexion-banner-titulo {
+  font-size: calc(1em * var(--font-scale));
+}
+
+.msg-text {
+  font-size: calc(14px * var(--font-scale));
+  line-height: 1.5;
+}
+
+/* ── Banner conexión ── */
+.conexion-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm, 8px);
+  border: 2px solid transparent;
+  font-family: 'DM Sans', sans-serif;
+  transition: background 0.25s, border-color 0.25s, transform 0.2s;
+}
+
+.conexion-banner-icon {
+  font-size: calc(28px * var(--font-scale));
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.conexion-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.conexion-banner-titulo {
+  display: block;
+  font-size: calc(15px * var(--font-scale));
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.conexion-banner-detalle {
+  display: block;
+  font-size: calc(13px * var(--font-scale));
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
+.conexion-banner-badge {
+  flex-shrink: 0;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(16px * var(--font-scale));
+  font-weight: 800;
+  font-family: 'DM Mono', monospace;
+}
+
+.conexion-esperando {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+  color: #78350F;
+}
+
+.conexion-esperando .conexion-banner-badge {
+  background: #FDE68A;
+  color: #92400E;
+}
+
+.conexion-conectado {
+  background: #D1FAE5;
+  border-color: #10B981;
+  color: #065F46;
+}
+
+.conexion-conectado .conexion-banner-badge {
+  background: #6EE7B7;
+  color: #047857;
+}
+
+.conexion-desconectado {
+  background: #FEE2E2;
+  border-color: #EF4444;
+  color: #991B1B;
+}
+
+.conexion-desconectado .conexion-banner-badge {
+  background: #FECACA;
+  color: #B91C1C;
+}
+
+.conexion-banner.pulso-estado {
+  animation: bannerPulso 0.55s ease 2;
+}
+
+@keyframes bannerPulso {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* ── Pulso mensaje nuevo en chat ── */
+.chat-box.msg-nuevo-pulso,
+.chat-box.msg-nuevo-pulso .chat-box-header {
+  animation: chatPulso 0.65s ease 2;
+}
+
+@keyframes chatPulso {
+  0%, 100% { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06); }
+  50% { box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.55), 0 4px 20px rgba(13, 148, 136, 0.25); }
+}
+
+.msg.msg-nuevo {
+  animation: msgEntrada 0.45s ease;
+}
+
+@keyframes msgEntrada {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Toast confirmación ── */
+.sh-toast-region {
+  position: fixed;
+  top: calc(72px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 24px), 480px);
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.sh-toast {
+  pointer-events: auto;
+  background: #065F46;
+  color: #fff;
+  border: 2px solid #10B981;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: calc(15px * var(--font-scale));
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  animation: toastIn 0.35s ease, toastOut 0.35s ease 2.2s forwards;
+  text-align: center;
+  max-width: 100%;
+}
+
+.sh-toast.error {
+  background: #991B1B;
+  border-color: #EF4444;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(-8px); }
+}
+
+/* ── Panel accesibilidad ── */
+.topbar-acces-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.acces-toolbar {
+  position: relative;
+}
+
+.acces-toggle {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: white;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.acces-toggle:hover,
+.acces-toggle[aria-expanded="true"] {
+  background: rgba(255,255,255,0.22);
+}
+
+.acces-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: white;
+  border: 1px solid var(--gray-border, #E2E8F0);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  z-index: 200;
+}
+
+.acces-panel[hidden] {
+  display: none;
+}
+
+.acces-panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-muted, #94A3B8);
+  margin-bottom: 12px;
+}
+
+.acces-field {
+  margin-bottom: 12px;
+}
+
+.acces-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy, #0F2744);
+  margin-bottom: 6px;
+}
+
+.acces-font-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.acces-font-btns button {
+  flex: 1;
+  border: 1.5px solid var(--gray-border, #E2E8F0);
+  background: white;
+  border-radius: 8px;
+  padding: 8px 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--navy, #0F2744);
+}
+
+.acces-font-btns button.active {
+  background: var(--navy, #0F2744);
+  color: white;
+  border-color: var(--navy, #0F2744);
+}
+
+.acces-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text, #0F172A);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.acces-check input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--navy, #0F2744);
+}
+
+/* ── Modo alto contraste ── */
+body.modo-accesible {
+  --navy: #000000;
+  --navy-mid: #1a1a1a;
+  --text: #000000;
+  --gray-bg: #ffffff;
+  --gray-border: #000000;
+  --gray-text: #1a1a1a;
+  --gray-muted: #333333;
+  --teal-bg: #e6fff9;
+  --teal-border: #000000;
+  --blue: #0000cc;
+  --success: #006600;
+  --danger: #cc0000;
+}
+
+body.modo-accesible .msg,
+body.modo-accesible .frase-btn,
+body.modo-accesible .chat-box,
+body.modo-accesible .conexion-banner {
+  border-width: 2px;
+}
+
+body.modo-accesible .topbar {
+  background: #000;
+}
+
+body.modo-accesible .status-pill,
+body.modo-accesible .session-pill {
+  border-width: 2px;
+}
+
+body.modo-accesible .nav-btn.active {
+  font-weight: 700;
+  text-decoration: underline;
+}

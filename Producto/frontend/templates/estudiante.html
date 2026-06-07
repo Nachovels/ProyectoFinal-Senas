@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpeakingHands — Estudiante</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/accesibilidad.css">
   <style>
     :root {
       --navy: #0F2744; --navy-mid: #1A3A5C;
@@ -15,10 +16,19 @@
       --text: #0F172A; --success: #10B981; --danger: #EF4444;
       --radius: 14px; --radius-sm: 8px;
       --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+      --app-max-width: 480px;
+      --content-pad-x: 16px;
+      --content-pad-y: 12px;
       --tab-height: 72px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
+    body {
+      font-family: 'DM Sans', sans-serif; background: var(--gray-bg); color: var(--text);
+      min-height: 100vh; height: 100vh; width: 100%; max-width: var(--app-max-width);
+      margin: 0 auto; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    #main-content.main-layout { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 
     .topbar { background: var(--navy); padding: 16px 20px 14px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .topbar-title { font-size: 17px; font-weight: 600; color: white; }
@@ -29,7 +39,7 @@
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
     /* PANTALLA UNIRSE */
-    .unirse-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 60px); padding: 24px; }
+    .unirse-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; padding: 24px; width: 100%; overflow-y: auto; }
     .unirse-card { background: white; border-radius: var(--radius); padding: 32px 24px; width: 100%; box-shadow: var(--shadow); text-align: center; }
     .unirse-icon { font-size: 48px; margin-bottom: 16px; }
     .unirse-title { font-size: 20px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
@@ -40,11 +50,97 @@
     .btn-unirse:hover { background: var(--navy-mid); }
     .btn-unirse:disabled { opacity: 0.6; cursor: not-allowed; }
     .error-msg { background: #FEE2E2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--danger); margin-top: 12px; display: none; }
+    .error-msg.info-sesion { background: #FEF3C7; border-color: #FCD34D; color: #92400E; }
 
     /* CONTENIDO PRINCIPAL */
-    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(var(--tab-height) + 16px); }
+    .main-layout { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .comm-panel { flex-shrink: 0; padding: var(--content-pad-y) var(--content-pad-x) 0; background: var(--gray-bg); border-bottom: 1px solid var(--gray-border); }
+    .comm-panel.hidden { display: none; }
+    .content {
+      flex: 1; overflow-y: auto; min-height: 0;
+      padding: var(--content-pad-y) var(--content-pad-x);
+      padding-bottom: calc(var(--tab-height) + 16px);
+      -webkit-overflow-scrolling: touch;
+    }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+    .tab-content.active > * + * { margin-top: 12px; }
+
+    /* Pestaña con composición (chat arriba + entrada abajo) */
+    .main-layout.layout-compose .comm-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .main-layout.layout-compose .comm-panel .chat-box {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 8px;
+    }
+    .main-layout.layout-compose .comm-panel .chat-messages {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+    }
+    .main-layout.layout-compose .content {
+      flex: 0 0 auto;
+      max-height: min(48vh, 420px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 var(--content-pad-x) calc(var(--tab-height) + 12px);
+      -webkit-overflow-scrolling: touch;
+    }
+    .main-layout.layout-compose .escribir-card { margin-bottom: 0; }
+
+    /* Voz (pestaña Escribir) */
+    .compose-divider { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; color: var(--gray-muted); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+    .compose-divider::before, .compose-divider::after { content: ''; flex: 1; height: 1px; background: var(--gray-border); }
+    .voz-solo-texto-banner { display: none; background: #FEF3C7; border: 1.5px solid #FCD34D; color: #92400E; border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; line-height: 1.45; margin-bottom: 12px; }
+    .voz-solo-texto-banner strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .voz-sim-banner { display: none; background: #EDE9FE; border: 1.5px solid #C4B5FD; color: #5B21B6; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 11px; line-height: 1.4; margin-bottom: 12px; }
+    .voz-sim-banner strong { display: block; margin-bottom: 3px; font-size: 12px; }
+    .mic-area { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 8px; }
+    .mic-area.mic-deshabilitado { opacity: 0.55; pointer-events: none; }
+    .mic-row { display: flex; align-items: center; gap: 12px; background: var(--gray-bg); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 12px; border: 1.5px solid var(--gray-border); transition: all 0.2s; }
+    .mic-row.active { border-color: var(--danger); background: #FFF5F5; }
+    .mic-row.recording { border-color: var(--danger); background: #FFF5F5; box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
+    .mic-row.paused { border-color: #F59E0B; background: #FFFBEB; box-shadow: none; }
+    .mic-rec-badge { display: none; font-size: 10px; font-weight: 700; color: white; background: var(--danger); padding: 2px 7px; border-radius: 4px; letter-spacing: 0.06em; animation: recPulse 1.2s infinite; }
+    .mic-row.recording .mic-rec-badge { display: inline-block; }
+    @keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+    .mic-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--gray-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+    .mic-circle.active { background: var(--danger); animation: micPulse 1.5s infinite; }
+    .mic-row.paused .mic-circle.active { background: #F59E0B; animation: none; }
+    @keyframes micPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+    .mic-circle svg { width: 16px; height: 16px; fill: white; }
+    .mic-status { font-size: 13px; color: var(--gray-text); flex: 1; min-width: 0; }
+    .mic-status.active { color: var(--danger); font-weight: 500; }
+    .mic-waves { display: flex; gap: 2px; align-items: center; height: 18px; }
+    .wave { width: 3px; background: var(--danger); border-radius: 2px; animation: wave 0.8s infinite ease; }
+    .wave:nth-child(2){animation-delay:0.1s} .wave:nth-child(3){animation-delay:0.2s} .wave:nth-child(4){animation-delay:0.15s} .wave:nth-child(5){animation-delay:0.05s}
+    @keyframes wave { 0%,100%{height:4px} 50%{height:16px} }
+    .mic-preview { font-size: 15px; color: var(--text); min-height: 22px; margin-bottom: 8px; padding: 10px 12px; line-height: 1.4; border-radius: var(--radius-sm); border: 1.5px solid transparent; transition: border-color 0.2s, background 0.2s; }
+    .mic-preview.empty { color: var(--gray-muted); font-size: 13px; padding: 0 2px; border: none; }
+    .mic-preview.live { border-color: #FECACA; background: #FFF5F5; }
+    .mic-preview .interim { color: var(--gray-text); font-style: italic; }
+    .mic-hint { font-size: 11px; color: var(--gray-muted); line-height: 1.45; margin-bottom: 12px; padding: 0 2px; }
+    .btn-hablar { flex: 1; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 13px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+    .btn-hablar svg { width: 16px; height: 16px; fill: white; }
+    .btn-hablar.recording { background: var(--danger); pointer-events: none; }
+    .btn-hablar:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-enviar-voz { background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 13px 14px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; transition: all 0.2s; white-space: nowrap; }
+    .btn-enviar-voz:hover:not(:disabled) { background: var(--navy-mid); }
+    .btn-enviar-voz:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-detener { background: #FEF3C7; color: #B45309; border: 1.5px solid #FDE68A; border-radius: var(--radius-sm); padding: 13px 14px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; transition: all 0.2s; white-space: nowrap; }
+    .btn-detener.btn-reanudar { background: #D1FAE5; color: #047857; border-color: #6EE7B7; }
+    .btn-borrar { background: #F1F5F9; color: var(--gray-text); border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 13px 14px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; transition: all 0.2s; white-space: nowrap; }
+    .btn-borrar:hover:not(:disabled) { background: #FEE2E2; color: var(--danger); border-color: #FECACA; }
+    .btn-borrar:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .cam-card { background: var(--navy); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
     .cam-frame { aspect-ratio: 4/3; background: #070F1E; display: flex; align-items: center; justify-content: center; position: relative; }
@@ -61,12 +157,14 @@
     .detected-label { font-size: 10px; color: var(--teal); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
     .detected-text { font-size: 18px; color: #064E3B; font-weight: 500; }
 
-    .chat-box { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 12px; }
+    .chat-box { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 0; }
+    .comm-panel .chat-box { margin-bottom: 12px; }
     .chat-box-header { background: var(--navy); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
     .chat-box-header .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
     .chat-box-title { font-size: 13px; font-weight: 500; color: white; }
     .chat-box-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-left: auto; }
-    .chat-messages { padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 120px; max-height: 260px; overflow-y: auto; }
+    .chat-messages { padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 100px; max-height: 200px; overflow-y: auto; scroll-behavior: smooth; }
+    .comm-panel .chat-messages { max-height: 180px; }
     .msg { max-width: 82%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.45; animation: fadeIn 0.2s ease; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
     .msg-label { font-size: 10px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
@@ -81,17 +179,37 @@
     .msg.frase .msg-text { color: var(--text); }
     .chat-empty-msg { text-align: center; padding: 30px 20px; color: var(--gray-muted); font-size: 13px; }
 
-    .frases-section { margin-bottom: 20px; }
-    .frases-section-label { font-size: 11px; font-weight: 600; color: var(--gray-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .frases-panel { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: visible; }
+    .frases-panel-header { padding: 12px 16px 10px; border-bottom: 1px solid var(--gray-border); background: linear-gradient(180deg, #fff 0%, var(--gray-bg) 100%); border-radius: var(--radius) var(--radius) 0 0; }
+    .frases-panel-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+    .frases-panel-hint { font-size: 12px; color: var(--gray-text); }
+    .frases-panel-body { padding: 14px 16px 16px; overflow: visible; }
+    .frases-section { margin-bottom: 16px; overflow: visible; }
+    .frases-section:last-child { margin-bottom: 0; }
+    .frases-section-label { font-size: 11px; font-weight: 600; color: var(--gray-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
-    .frases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .frase-btn { background: white; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 13px 12px; font-size: 13px; color: var(--navy); cursor: pointer; text-align: center; transition: all 0.15s; line-height: 1.35; font-family: 'DM Sans'; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-    .frase-btn:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-1px); }
+    .frase-categoria { border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; background: white; }
+    .frase-categoria:last-child { margin-bottom: 0; }
+    .frase-cat-header { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: white; border: none; cursor: pointer; font-family: 'DM Sans'; text-align: left; transition: background 0.15s; }
+    .frase-cat-header:hover { background: var(--gray-bg); }
+    .frase-cat-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+    .frase-cat-titulo { flex: 1; font-size: 14px; font-weight: 600; color: var(--navy); }
+    .frase-cat-chevron { font-size: 10px; color: var(--gray-muted); transition: transform 0.2s; }
+    .frase-categoria.abierta .frase-cat-chevron { transform: rotate(180deg); }
+    .frase-cat-body { display: none; padding: 0 12px 12px; background: white; }
+    .frase-categoria.abierta .frase-cat-body { display: block; }
+    .frases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+    .frases-grid .frase-btn { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; white-space: normal; word-break: break-word; hyphens: auto; }
+    .frase-btn { background: white; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 12px 10px; font-size: 13px; color: var(--navy); cursor: pointer; text-align: center; transition: border-color 0.15s, color 0.15s, background 0.15s; line-height: 1.35; font-family: 'DM Sans'; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .frase-btn:hover { border-color: var(--blue); color: var(--blue); background: #F8FAFC; }
     .frase-btn.hablando { background: var(--teal-bg); border-color: var(--teal); color: #065F46; }
+    .frase-btn-referencia { cursor: default; background: var(--gray-bg); color: var(--gray-text); font-size: 12px; }
+    .frase-btn-referencia:hover { border-color: var(--gray-border); color: var(--gray-text); background: var(--gray-bg); }
 
     .escribir-card { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
     .escribir-label { font-size: 11px; color: var(--gray-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    textarea { width: 100%; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; font-family: 'DM Sans'; color: var(--text); resize: none; min-height: 100px; outline: none; transition: border-color 0.2s; }
+    .escribir-hint { font-size: 11px; color: var(--gray-muted); margin-top: 8px; }
+    textarea { width: 100%; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; font-family: 'DM Sans'; color: var(--text); resize: none; min-height: 88px; max-height: 120px; outline: none; transition: border-color 0.2s; }
     textarea:focus { border-color: var(--blue); }
     .btn-row { display: flex; gap: 8px; margin-top: 10px; }
     .btn-primary { flex: 1; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; }
@@ -111,11 +229,32 @@
     .historial-empty .icon { font-size: 36px; opacity: 0.3; margin-bottom: 10px; }
     .loading { text-align: center; padding: 40px; color: var(--gray-muted); font-size: 14px; }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: var(--tab-height); background: white; border-top: 1px solid var(--gray-border); display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); z-index: 100; }
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: var(--app-max-width); height: var(--tab-height);
+      background: white; border-top: 1px solid var(--gray-border);
+      display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); z-index: 100;
+    }
     .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: none; cursor: pointer; font-family: 'DM Sans'; color: var(--gray-muted); font-size: 10px; font-weight: 500; transition: color 0.15s; padding: 8px 4px; position: relative; }
     .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
     .nav-btn.active { color: var(--navy); }
     .nav-btn.active::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 32px; height: 2.5px; background: var(--navy); border-radius: 0 0 3px 3px; }
+
+    .btn-abandonar-sala {
+      display: none;
+      background: rgba(239,68,68,0.18);
+      border: 1.5px solid rgba(252,165,165,0.55);
+      color: #FECACA;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-abandonar-sala:hover { background: rgba(239,68,68,0.32); color: #fff; }
   </style>
 </head>
 <body>
@@ -129,6 +268,9 @@
       <div class="dot"></div>
       <span id="statusText">Conectado</span>
     </div>
+    <button type="button" class="btn-abandonar-sala" id="btn-abandonar" onclick="abandonarSesion()" title="Salir de la sala">
+      Salir de sala
+    </button>
   </div>
 
   <!-- PANTALLA UNIRSE -->
@@ -144,7 +286,29 @@
   </div>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <div style="display:none" id="main-content">
+  <div style="display:none" id="main-content" class="main-layout">
+    <!-- Chat persistente: visible en Señas, Frases y Escribir -->
+    <div class="comm-panel" id="comm-panel">
+      <div class="conexion-banner conexion-conectado" id="banner-sesion" role="status" aria-live="polite" aria-atomic="true" hidden>
+        <span class="conexion-banner-icon" aria-hidden="true">✅</span>
+        <div class="conexion-banner-body">
+          <strong class="conexion-banner-titulo">Conectado a la sala</strong>
+          <span class="conexion-banner-detalle">Sesión activa</span>
+        </div>
+        <span class="conexion-banner-badge" aria-hidden="true">✓</span>
+      </div>
+      <div class="chat-box" id="chat-box-principal">
+        <div class="chat-box-header">
+          <div class="dot"></div>
+          <div class="chat-box-title">Conversación</div>
+          <div class="chat-box-sub" id="chat-hora">—</div>
+        </div>
+        <div class="chat-messages" id="chat-messages-main">
+          <div class="chat-empty-msg">Esperando mensajes del coordinador...</div>
+        </div>
+      </div>
+    </div>
+
     <div class="content">
       <!-- SEÑAS -->
       <div class="tab-content active" id="tab-senas">
@@ -166,53 +330,77 @@
           <div class="detected-label">Traducción IA</div>
           <div class="detected-text" id="senaDetectada">Esperando señas...</div>
         </div>
-        <div class="chat-box">
-          <div class="chat-box-header">
-            <div class="dot"></div>
-            <div class="chat-box-title">El coordinador dice:</div>
-            <div class="chat-box-sub" id="chat-hora">—</div>
-          </div>
-          <div class="chat-messages" id="chat-messages-senas">
-            <div class="chat-empty-msg">Esperando al coordinador...</div>
-          </div>
-        </div>
       </div>
 
-      <!-- FRASES -->
+      <!-- FRASES (junto al chat persistente arriba) -->
       <div class="tab-content" id="tab-frases">
-        <div class="frases-section">
-          <div class="frases-section-label">
-            Estudiante → Coordinador
-            <span class="badge" style="background:#EFF6FF;color:#2563EB">toca para hablar</span>
+        <div class="frases-panel">
+          <div class="frases-panel-header">
+            <div class="frases-panel-title">Frases rápidas</div>
+            <div class="frases-panel-hint">Comunicación de respaldo — el chat sigue visible arriba</div>
           </div>
-          <div class="frases-grid" id="frases-est"></div>
-        </div>
-        <div class="frases-section">
-          <div class="frases-section-label" style="color:#6366F1">
-            Coordinador → Estudiante
-            <span class="badge" style="background:#EEF2FF;color:#6366F1">mostrar pantalla</span>
+          <div class="frases-panel-body">
+            <div class="frases-section">
+              <div class="frases-section-label">
+                Tú → Coordinador
+                <span class="badge" style="background:#EFF6FF;color:#2563EB">toca para hablar</span>
+              </div>
+              <div id="frases-est-accordion"></div>
+            </div>
           </div>
-          <div class="frases-grid" id="frases-coord"></div>
         </div>
       </div>
 
       <!-- ESCRIBIR -->
       <div class="tab-content" id="tab-escribir">
-        <div class="chat-box" style="margin-bottom:12px">
-          <div class="chat-box-header">
-            <div class="dot"></div>
-            <div class="chat-box-title">Conversación</div>
-          </div>
-          <div class="chat-messages" id="chat-messages-escribir">
-            <div class="chat-empty-msg">La conversación aparecerá aquí</div>
-          </div>
-        </div>
         <div class="escribir-card">
           <div class="escribir-label">Tu respuesta</div>
           <textarea id="mi-respuesta" placeholder="Escribe aquí tu mensaje..."></textarea>
           <div class="btn-row">
             <button class="btn-primary" onclick="enviarEscrito()">📤 Enviar</button>
             <button class="btn-secondary" onclick="leerEscrito()">🔊 Leer</button>
+          </div>
+          <div class="escribir-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+        </div>
+        <div class="compose-divider">o usa tu voz</div>
+        <div class="voz-solo-texto-banner" id="voz-solo-texto-banner">
+          <strong>Voz no disponible — solo texto</strong>
+          Usa el cuadro de arriba o las frases rápidas. La transcripción por voz no está operativa en esta red.
+        </div>
+        <div class="voz-sim-banner" id="voz-sim-banner"></div>
+        <div class="mic-area" id="mic-area">
+          <div class="mic-row" id="mic-row">
+            <div class="mic-circle" id="mic-circle">
+              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </div>
+            <div class="mic-status" id="mic-status">Listo para escuchar</div>
+            <span class="mic-rec-badge" id="mic-rec-badge">REC</span>
+            <div class="mic-waves" id="mic-waves" style="display:none">
+              <div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div>
+            </div>
+          </div>
+          <div class="mic-preview empty" id="mic-preview">Aquí aparecerá lo que dices...</div>
+          <p class="mic-hint" id="mic-hint-red" style="display:none;color:var(--danger);font-weight:500">
+            El navegador no pudo conectar con Google. Cambiando a transcripción por servidor…
+          </p>
+          <p class="mic-hint" id="mic-hint-servidor" style="display:none;color:var(--blue);font-weight:500">
+            Google (servidor) — di tu frase completa y pulsa Enviar.
+          </p>
+          <p class="mic-hint" id="mic-hint-offline" style="display:none;color:var(--blue);font-weight:500">
+            Whisper (respaldo) — Google no responde en esta red; di tu frase y pulsa Enviar.
+          </p>
+          <p class="mic-hint" id="mic-hint-google-nav" style="display:none;color:var(--success);font-weight:500">
+            Google (navegador) — transcribiendo en tiempo real mientras hablas.
+          </p>
+          <p class="mic-hint">Pulsa <strong>Hablar</strong>, revisa el texto y pulsa <strong>Enviar</strong> para mandarlo al chat.</p>
+          <div class="btn-row">
+            <button type="button" class="btn-hablar" id="btn-hablar">
+              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              Hablar
+            </button>
+            <button type="button" class="btn-enviar-voz" id="btn-enviar-voz" onclick="VozSesion.enviarAlChat()" disabled>Enviar</button>
+            <button type="button" class="btn-detener" id="btn-pausar" onclick="VozSesion.togglePausa()" style="display:none">⏸ Pausar</button>
+            <button type="button" class="btn-borrar" id="btn-borrar" onclick="VozSesion.borrar()" disabled>Borrar todo</button>
           </div>
         </div>
       </div>
@@ -243,9 +431,141 @@
     </nav>
   </div>
 
+  <script src="/js/accesibilidad.js"></script>
+  <script src="/js/voz-sesion.js"></script>
   <script>
+    Accesibilidad.init({
+      rol: 'estudiante',
+      chatBoxSelector: '#chat-box-principal',
+      bannerSesionId: 'banner-sesion',
+    });
     let socket = null;
     let codigoSala = null;
+    let sesionIdActual = null;
+    let nombreCoordinador = null;
+
+    function miNombre() {
+      return sessionStorage.getItem('nombre') || 'Estudiante';
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function medioMsg(tipo) {
+      if (tipo === 'texto') return 'texto';
+      if (tipo === 'voz') return 'voz';
+      if (tipo === 'frase_rapida') return 'frase rápida';
+      return '';
+    }
+
+    function etiquetaPropio(medio) {
+      return medio ? `${miNombre()} (${medio})` : miNombre();
+    }
+
+    function etiquetaCoordinador(msg) {
+      const nombre = (msg && msg.nombre) || nombreCoordinador || 'Coordinador';
+      const medio = medioMsg(msg && msg.tipo);
+      return medio ? `${nombre} (${medio})` : nombre;
+    }
+
+    function etiquetaOtroEstudiante(msg) {
+      const nombre = (msg && msg.nombre) || 'Estudiante';
+      const medio = medioMsg(msg && msg.tipo);
+      return medio ? `${nombre} (${medio})` : nombre;
+    }
+
+    function actualizarHeaderSala() {
+      const codigo = codigoSala || '';
+      let sub = miNombre();
+      if (codigo) {
+        sub += ` · Sala ${codigo}`;
+        if (nombreCoordinador) sub += ` · ${nombreCoordinador}`;
+      } else {
+        sub += ' — Vista del estudiante';
+      }
+      document.getElementById('topbar-sub').textContent = sub;
+      const chatTitle = document.querySelector('.chat-box-title');
+      if (chatTitle) {
+        chatTitle.textContent = nombreCoordinador
+          ? `Conversación con ${nombreCoordinador}`
+          : 'Conversación';
+      }
+    }
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + sessionStorage.getItem('token') };
+    }
+
+    function wsUrl(path) {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const token = encodeURIComponent(sessionStorage.getItem('token') || '');
+      const sep = path.includes('?') ? '&' : '?';
+      return `${proto}//${location.host}${path}${sep}token=${token}`;
+    }
+
+    async function verificarAcceso() {
+      const token = sessionStorage.getItem('token');
+      const rol = sessionStorage.getItem('rol');
+      if (!token || rol !== 'estudiante') {
+        window.location.href = '/login';
+        return false;
+      }
+      try {
+        const res = await fetch('/api/me', { headers: authHeaders() });
+        if (!res.ok) {
+          sessionStorage.clear();
+          window.location.href = '/login';
+          return false;
+        }
+        const data = await res.json();
+        sessionStorage.setItem('userId', data.id);
+        sessionStorage.setItem('nombre', data.nombre);
+        actualizarHeaderSala();
+        return true;
+      } catch (_) {
+        window.location.href = '/login';
+        return false;
+      }
+    }
+
+    verificarAcceso().then(ok => { if (ok) initVozEstudiante(); });
+
+    function socketListo() {
+      return socket && socket.readyState === WebSocket.OPEN;
+    }
+
+    function redirigirSiSesionExpirada(res) {
+      if (res.status !== 401) return false;
+      sessionStorage.clear();
+      window.location.href = '/login';
+      return true;
+    }
+
+    function initVozEstudiante() {
+      if (window._vozEstInit) return;
+      window._vozEstInit = true;
+      VozSesion.init({
+        storageKey: 'est_voz_google_caido',
+        sinBorradorChat: true,
+        mensajeContextoInseguro: 'Abre http://localhost:8000/estudiante (no el archivo HTML directo).',
+        authHeaders,
+        redirigirSiSesionExpirada,
+        onEnviar(texto) {
+          if (!socketListo()) {
+            alert('No hay conexión con la sala.');
+            return;
+          }
+          socket.send(JSON.stringify({ tipo: 'voz', contenido: texto }));
+          agregarMsg(texto, 'estudiante', etiquetaPropio('voz'));
+          Accesibilidad.confirmarEnvio('Mensaje enviado');
+        },
+      });
+    }
 
     // Auto-mayúsculas en el input
     document.getElementById('codigo-input').addEventListener('input', function() {
@@ -266,7 +586,12 @@
       btn.textContent = 'Verificando...';
       errorMsg.style.display = 'none';
 
-      const res = await fetch(`/api/validar-codigo/${codigo}`);
+      const res = await fetch(`/api/validar-codigo/${codigo}`, { headers: authHeaders() });
+      if (res.status === 401 || res.status === 403) {
+        sessionStorage.clear();
+        window.location.href = '/login';
+        return;
+      }
       if (!res.ok) {
         mostrarError('Código inválido o sesión no encontrada.');
         btn.disabled = false;
@@ -275,6 +600,9 @@
       }
 
       codigoSala = codigo;
+      const data = await res.json();
+      sesionIdActual = data.sesion_id;
+      if (data.coordinador_nombre) nombreCoordinador = data.coordinador_nombre;
       conectarWebSocket(codigo);
     }
 
@@ -284,52 +612,164 @@
       e.style.display = 'block';
     }
 
+    function volverPantallaUnirse(opciones) {
+      if (window._volverUnirseLock) return;
+      window._volverUnirseLock = true;
+      setTimeout(() => { window._volverUnirseLock = false; }, 1000);
+
+      opciones = opciones || {};
+      const motivo = opciones.motivo || '';
+      const sesionTerminada = !!opciones.sesionTerminada;
+
+      if (socket) {
+        socket.onclose = null;
+        socket.onmessage = null;
+        try { socket.close(1000, 'salir'); } catch (_) {}
+        socket = null;
+      }
+      if (window.VozSesion && typeof VozSesion.cerrar === 'function') {
+        try { VozSesion.cerrar(); } catch (_) {}
+      }
+
+      codigoSala = null;
+      sesionIdActual = null;
+
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('unirse-screen').style.display = 'flex';
+      document.getElementById('status-pill').style.display = 'none';
+      const btnAbandonar = document.getElementById('btn-abandonar');
+      if (btnAbandonar) btnAbandonar.style.display = 'none';
+
+      const banner = document.getElementById('banner-sesion');
+      if (banner) banner.hidden = true;
+
+      const chat = document.getElementById('chat-messages-main');
+      if (chat) {
+        chat.innerHTML = '<div class="chat-empty-msg">Esperando mensajes del coordinador...</div>';
+      }
+      document.getElementById('topbar-sub').textContent = 'Vista del estudiante';
+      document.getElementById('chat-hora').textContent = '—';
+      document.getElementById('codigo-input').value = '';
+
+      const btnUnirse = document.getElementById('btn-unirse');
+      btnUnirse.disabled = false;
+      btnUnirse.textContent = 'Unirse →';
+
+      document.getElementById('error-msg').style.display = 'none';
+      const errEl = document.getElementById('error-msg');
+      errEl.classList.toggle('info-sesion', sesionTerminada);
+
+      if (motivo) {
+        if (sesionTerminada) {
+          Accesibilidad.toast(motivo);
+        }
+        mostrarError(motivo);
+      }
+    }
+
+    function abandonarSesion() {
+      if (!confirm('¿Salir de la sala? Podrás volver a unirte con el mismo código si la sesión sigue activa.')) {
+        return;
+      }
+      volverPantallaUnirse({
+        motivo: 'Saliste de la sala. Puedes unirte de nuevo cuando quieras.',
+      });
+    }
+
     function conectarWebSocket(codigo) {
-      socket = new WebSocket(`ws://localhost:8000/ws/estudiante/${codigo}`);
+      socket = new WebSocket(wsUrl(`/ws/estudiante/${codigo}`));
 
       socket.onopen = () => {
-        // Ocultar pantalla de unirse y mostrar contenido
         document.getElementById('unirse-screen').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('main-content').style.display = 'flex';
         document.getElementById('status-pill').style.display = 'flex';
-        document.getElementById('topbar-sub').textContent = 'Sala: ' + codigo;
+        const btnAbandonar = document.getElementById('btn-abandonar');
+        if (btnAbandonar) btnAbandonar.style.display = 'inline-block';
+        document.getElementById('error-msg').style.display = 'none';
+        actualizarHeaderSala();
+        Accesibilidad.actualizarSesionEstudiante({
+          conectado: true,
+          coordinador: nombreCoordinador,
+        });
         document.getElementById('btn-unirse').disabled = false;
         document.getElementById('btn-unirse').textContent = 'Unirse →';
+        initVozEstudiante();
       };
 
       socket.onmessage = (event) => {
         const msg = JSON.parse(event.data);
-        const tipo = msg.tipo === 'voz' ? 'coord' : 'frase';
-        const label = msg.tipo === 'voz' ? 'Coordinador' : 'Frase rápida';
-        agregarMsg(msg.contenido, tipo, label);
+        const myId = parseInt(sessionStorage.getItem('userId') || '0', 10);
+
+        if (msg.tipo === 'sesion_terminada') {
+          volverPantallaUnirse({
+            sesionTerminada: true,
+            motivo: msg.contenido || 'El coordinador finalizó la sesión.',
+          });
+          return;
+        }
+
+        if (msg.tipo === 'estudiante_conectado' || msg.tipo === 'estudiante_desconectado') {
+          return;
+        }
+
+        if (msg.remitente_rol === 'estudiante') {
+          if (msg.usuario_id === myId) return;
+          agregarMsg(msg.contenido, 'estudiante', etiquetaOtroEstudiante(msg), { entrante: true });
+        } else {
+          if (msg.nombre) {
+            nombreCoordinador = msg.nombre;
+            actualizarHeaderSala();
+            Accesibilidad.actualizarSesionEstudiante({
+              conectado: true,
+              coordinador: nombreCoordinador,
+            });
+          }
+          agregarMsg(msg.contenido, 'coord', etiquetaCoordinador(msg), { entrante: true });
+        }
         document.getElementById('chat-hora').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
       };
 
       socket.onclose = (e) => {
-        if (e.code === 4001) {
-          mostrarError('Código inválido o sesión no encontrada.');
-          document.getElementById('btn-unirse').disabled = false;
-          document.getElementById('btn-unirse').textContent = 'Unirse →';
+        if (e.code === 4003) {
+          sessionStorage.clear();
+          window.location.href = '/login';
           return;
         }
-        document.getElementById('statusText').textContent = 'Desconectado';
-        document.querySelector('.status-pill .dot').style.background = '#EF4444';
-        document.getElementById('statusText').style.color = '#EF4444';
+        if (e.code === 4004) {
+          volverPantallaUnirse({
+            sesionTerminada: true,
+            motivo: 'El coordinador finalizó la sesión.',
+          });
+          return;
+        }
+        if (e.code === 4001) {
+          volverPantallaUnirse({
+            motivo: 'Código inválido o la sesión ya no está disponible.',
+          });
+          return;
+        }
+        if (document.getElementById('main-content').style.display !== 'none') {
+          volverPantallaUnirse({
+            motivo: 'Se perdió la conexión. Intenta unirte de nuevo con el código.',
+          });
+        }
       };
     }
 
     // ── Mensajes ───────────────────────────────────────────────
-    function agregarMsg(contenido, tipo, label) {
-      ['chat-messages-senas','chat-messages-escribir'].forEach(id => {
-        const c = document.getElementById(id);
-        const empty = c.querySelector('.chat-empty-msg');
-        if (empty) empty.remove();
-        const d = document.createElement('div');
-        d.className = 'msg ' + tipo;
-        d.innerHTML = `<div class="msg-label">${label}</div><div class="msg-text">${contenido}</div>`;
-        c.appendChild(d);
-        c.scrollTop = c.scrollHeight;
-      });
+    function agregarMsg(contenido, tipo, label, opciones) {
+      const c = document.getElementById('chat-messages-main');
+      const empty = c.querySelector('.chat-empty-msg');
+      if (empty) empty.remove();
+      const d = document.createElement('div');
+      d.className = 'msg ' + tipo;
+      d.innerHTML = `<div class="msg-label">${escHtml(label)}</div><div class="msg-text">${escHtml(contenido)}</div>`;
+      c.appendChild(d);
+      c.scrollTop = c.scrollHeight;
+      if (opciones && opciones.entrante) {
+        Accesibilidad.pulsoMensajeNuevo({ entrante: true });
+        Accesibilidad.marcarMsgNuevo(d);
+      }
     }
 
     function switchTab(name, btn) {
@@ -337,27 +777,86 @@
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
       btn.classList.add('active');
+      document.getElementById('comm-panel').classList.toggle('hidden', name === 'historial');
+      document.getElementById('main-content').classList.toggle('layout-compose', name === 'escribir');
     }
 
     // ── Frases rápidas ─────────────────────────────────────────
-    const frasesEst = ["No entendí, ¿puede repetir?","Tengo una pregunta","¿Puede escribirlo?","Entendí, gracias","Necesito ayuda con mi malla","¿Cuándo es el plazo?"];
-    const frasesCoord = ["¿Me entiendes?","Espera un momento","Muy bien","Es tu turno"];
+    const ICONOS_CATEGORIA = {
+      'Comprensión': '👂', 'Ritmo': '⏱', 'Ánimo': '👍', 'Apoyo': '🤝', 'General': '💬'
+    };
 
-    function crearFrases(frases, id) {
-      const grid = document.getElementById(id);
+    function agruparFrasesDesdeApi(frases) {
+      const orden = [];
+      const map = {};
       frases.forEach(f => {
-        const btn = document.createElement('button');
-        btn.className = 'frase-btn'; btn.textContent = f;
-        btn.onclick = () => {
-          hablar(f, btn);
-          if (socket && socket.readyState === 1) socket.send(JSON.stringify({tipo:'frase_rapida',contenido:f}));
-          agregarMsg(f, 'estudiante', 'Tú (frase rápida)');
-        };
-        grid.appendChild(btn);
+        const cat = f.categoria || 'General';
+        if (!map[cat]) { map[cat] = []; orden.push(cat); }
+        map[cat].push(f.contenido);
+      });
+      return orden.map(cat => ({
+        id: cat.toLowerCase().replace(/\s+/g, '-'),
+        icon: ICONOS_CATEGORIA[cat] || '💬',
+        titulo: cat,
+        frases: map[cat],
+      }));
+    }
+
+    function toggleFraseCategoria(btn) {
+      const section = btn.closest('.frase-categoria');
+      const accordion = section.parentElement;
+      const yaAbierta = section.classList.contains('abierta');
+      accordion.querySelectorAll('.frase-categoria.abierta').forEach(s => s.classList.remove('abierta'));
+      if (!yaAbierta) section.classList.add('abierta');
+    }
+
+    function renderFrasesAccordion(containerId, categorias, alEnviar) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      categorias.forEach((cat, i) => {
+        const section = document.createElement('div');
+        section.className = 'frase-categoria' + (i === 0 ? ' abierta' : '');
+        section.innerHTML = `
+          <button type="button" class="frase-cat-header" onclick="toggleFraseCategoria(this)">
+            <span class="frase-cat-icon">${cat.icon}</span>
+            <span class="frase-cat-titulo">${cat.titulo}</span>
+            <span class="frase-cat-chevron">▼</span>
+          </button>
+          <div class="frase-cat-body"><div class="frases-grid"></div></div>`;
+        const grid = section.querySelector('.frases-grid');
+        cat.frases.forEach(texto => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'frase-btn' + (alEnviar ? '' : ' frase-btn-referencia');
+          btn.textContent = texto;
+          if (alEnviar) {
+            btn.onclick = () => {
+              hablar(texto, btn);
+              if (!socketListo()) return;
+              socket.send(JSON.stringify({ tipo: 'frase_rapida', contenido: texto }));
+              agregarMsg(texto, 'estudiante', etiquetaPropio('frase rápida'));
+              Accesibilidad.confirmarEnvio('Mensaje enviado');
+            };
+          }
+          grid.appendChild(btn);
+        });
+        container.appendChild(section);
       });
     }
-    crearFrases(frasesEst, 'frases-est');
-    crearFrases(frasesCoord, 'frases-coord');
+
+    async function cargarFrasesEst() {
+      const vacia = [{ id: 'general', icon: '💬', titulo: 'General', frases: ['Sin frases configuradas'] }];
+      try {
+        const resEst = await fetch('/api/frases-rapidas?dirigida_a=estudiante', { headers: authHeaders() });
+        if (resEst.ok) {
+          const cats = agruparFrasesDesdeApi(await resEst.json());
+          renderFrasesAccordion('frases-est-accordion', cats.length ? cats : vacia, true);
+        }
+      } catch (_) {}
+    }
+
+    cargarFrasesEst();
 
     function hablar(txt, btn) {
       window.speechSynthesis.cancel();
@@ -370,9 +869,24 @@
     function enviarEscrito() {
       const txt = document.getElementById('mi-respuesta').value.trim();
       if (!txt) return;
-      if (socket && socket.readyState === 1) socket.send(JSON.stringify({tipo:'texto',contenido:txt}));
-      agregarMsg(txt, 'estudiante', 'Tú');
+      if (!socketListo()) {
+        alert('No hay conexión con la sala.');
+        return;
+      }
+      socket.send(JSON.stringify({tipo:'texto',contenido:txt}));
+      agregarMsg(txt, 'estudiante', etiquetaPropio('texto'));
+      Accesibilidad.confirmarEnvio('Mensaje enviado');
       document.getElementById('mi-respuesta').value = '';
+    }
+
+    const inputRespuesta = document.getElementById('mi-respuesta');
+    if (inputRespuesta) {
+      inputRespuesta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          enviarEscrito();
+        }
+      });
     }
 
     function leerEscrito() {
@@ -383,31 +897,36 @@
     // ── Historial ──────────────────────────────────────────────
     async function cargarHistorial() {
       const c = document.getElementById('historial-container');
+      if (!sesionIdActual) {
+        c.innerHTML = '<div class="historial-empty"><div class="icon">📋</div><div>Únete a una sala para ver el historial de esta sesión</div></div>';
+        return;
+      }
       c.innerHTML = '<div class="loading">Cargando...</div>';
       try {
-        const res = await fetch('/api/historial');
-        const sesiones = await res.json();
-        if (!sesiones.length) {
-          c.innerHTML = '<div class="historial-empty"><div class="icon">📋</div><div>No hay sesiones registradas</div></div>';
+        const res = await fetch(`/api/historial?sesion_id=${sesionIdActual}`, { headers: authHeaders() });
+        if (!res.ok) {
+          c.innerHTML = '<div class="historial-empty"><div class="icon">⚠️</div><div>No se pudo cargar el historial de esta sala</div></div>';
           return;
         }
-        c.innerHTML = '';
-        sesiones.forEach(s => {
-          const div = document.createElement('div');
-          div.className = 'historial-sesion';
-          const msgs = s.mensajes.map(m =>
-            `<div class="historial-msg ${m.tipo}" style="display:flex;flex-direction:column">
-              <div class="historial-hora">${m.hora} — ${m.tipo}</div>${m.contenido}
-            </div>`
-          ).join('') || '<div style="color:#94A3B8;font-size:13px">Sin mensajes</div>';
-          div.innerHTML = `
+        const sesiones = await res.json();
+        if (!sesiones.length) {
+          c.innerHTML = '<div class="historial-empty"><div class="icon">📋</div><div>Aún no hay mensajes en esta sala</div></div>';
+          return;
+        }
+        const s = sesiones[0];
+        const msgs = s.mensajes.map(m =>
+          `<div class="historial-msg ${m.tipo}" style="display:flex;flex-direction:column">
+            <div class="historial-hora">${m.hora}${m.usuario ? ' — ' + m.usuario : ''}</div>${m.contenido}
+          </div>`
+        ).join('');
+        c.innerHTML = `
+          <div class="historial-sesion">
             <div class="historial-header">
-              <div class="historial-fecha">📅 ${s.iniciada_en}</div>
+              <div class="historial-fecha">Sala ${s.codigo || codigoSala || ''} · ${s.iniciada_en}</div>
               <div class="historial-duracion">hasta ${s.finalizada_en}</div>
             </div>
-            <div class="historial-body">${msgs}</div>`;
-          c.appendChild(div);
-        });
+            <div class="historial-body">${msgs}</div>
+          </div>`;
       } catch(e) {
         c.innerHTML = '<div class="historial-empty"><div class="icon">⚠️</div><div>Error al cargar</div></div>';
       }

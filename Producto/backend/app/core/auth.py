@@ -8,7 +8,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "speakinghands_secret_2026")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -30,3 +30,13 @@ def verificar_token(token: str):
         return payload
     except JWTError:
         return None
+
+def extraer_bearer(authorization: str | None) -> str | None:
+    if authorization and authorization.startswith("Bearer "):
+        return authorization[7:]
+    return None
+
+def usuario_desde_token(token: str) -> dict | None:
+    if not token:
+        return None
+    return verificar_token(token)

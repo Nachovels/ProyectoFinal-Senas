@@ -17,26 +17,32 @@
 
     .card { background: white; border-radius: var(--radius); padding: 40px 32px; width: 100%; max-width: 400px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
 
-    .logo { text-align: center; margin-bottom: 32px; }
+    .logo { text-align: center; margin-bottom: 28px; }
     .logo-title { font-size: 24px; font-weight: 600; color: var(--navy); }
     .logo-sub { font-size: 13px; color: var(--gray-muted); margin-top: 4px; }
+
+    .tabs { display: flex; gap: 4px; background: var(--gray-bg); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 24px; }
+    .tab { flex: 1; border: none; background: none; padding: 10px; font-size: 14px; font-weight: 500; font-family: 'DM Sans'; color: var(--gray-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .tab.active { background: white; color: var(--navy); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
 
     .form-group { margin-bottom: 16px; }
     label { font-size: 13px; font-weight: 500; color: var(--text); display: block; margin-bottom: 6px; }
     input { width: 100%; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; font-family: 'DM Sans'; color: var(--text); outline: none; transition: border-color 0.2s; }
     input:focus { border-color: var(--blue); }
 
-    .btn-login { width: 100%; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; margin-top: 8px; transition: background 0.2s; }
-    .btn-login:hover { background: #1A3A5C; }
-    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+    .rol-hint { font-size: 12px; color: var(--gray-muted); margin-top: 4px; line-height: 1.45; }
+
+    .btn-submit { width: 100%; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; margin-top: 8px; transition: background 0.2s; }
+    .btn-submit:hover { background: #1A3A5C; }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .error { background: #FEE2E2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--danger); margin-top: 12px; display: none; }
 
-    .roles-info { display: flex; gap: 8px; margin-top: 24px; }
-    .rol-badge { flex: 1; text-align: center; padding: 10px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; }
-    .rol-badge.coord { background: #EFF6FF; color: var(--blue); border: 1px solid #BFDBFE; }
-    .rol-badge.est { background: #F0FDF9; color: var(--teal); border: 1px solid #99F6E4; }
-    .rol-badge .icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    .demo-hint { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--gray-border); font-size: 11px; color: var(--gray-muted); line-height: 1.6; text-align: center; }
+    .demo-hint code { font-size: 10px; background: var(--gray-bg); padding: 2px 5px; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -46,72 +52,138 @@
       <div class="logo-sub">Plataforma de comunicación inclusiva</div>
     </div>
 
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Correo electrónico</label>
-        <input type="email" id="email" placeholder="tu@correo.cl" required>
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="password" placeholder="••••••••" required>
-      </div>
-      <button type="submit" class="btn-login" id="btnLogin">Iniciar sesión</button>
-      <div class="error" id="errorMsg">Correo o contraseña incorrectos.</div>
-    </form>
+    <div class="tabs">
+      <button type="button" class="tab active" data-panel="login">Iniciar sesión</button>
+      <button type="button" class="tab" data-panel="registro">Crear cuenta</button>
+    </div>
 
-    <div class="roles-info">
-      <div class="rol-badge coord">
-        
-        Coordinador
-      </div>
-      <div class="rol-badge est">
-        
-        Estudiante
-      </div>
+    <div class="panel active" id="panel-login">
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="login-email" placeholder="tu@correo.cl" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="login-password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-submit" id="btnLogin">Iniciar sesión</button>
+        <div class="error" id="loginError">Correo o contraseña incorrectos.</div>
+      </form>
+    </div>
+
+    <div class="panel" id="panel-registro">
+      <form id="registroForm">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" id="reg-nombre" placeholder="Tu nombre" required minlength="2">
+        </div>
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="reg-email" placeholder="tu@correo.cl" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="reg-password" placeholder="Mínimo 4 caracteres" required minlength="4">
+          <p class="rol-hint">Las cuentas nuevas se crean como <strong>estudiante</strong>. Un administrador puede promover a coordinador.</p>
+        </div>
+        <button type="submit" class="btn-submit" id="btnRegistro">Crear cuenta</button>
+        <div class="error" id="registroError"></div>
+      </form>
+    </div>
+
+    <div class="demo-hint">
+      Demo — contraseña <code>demo</code> para todos:<br>
+      <code>admin@demo.cl</code> · <code>coordinador@demo.cl</code> · <code>estudiante@demo.cl</code>
     </div>
   </div>
 
   <script>
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+      };
+    });
+
+    function guardarSesion(data) {
+      sessionStorage.setItem('token', data.token);
+      sessionStorage.setItem('userId', data.id);
+      sessionStorage.setItem('nombre', data.nombre);
+      sessionStorage.setItem('rol', data.rol);
+    }
+
+    function redirigirPorRol(rol) {
+      if (rol === 'admin') window.location.href = '/admin';
+      else if (rol === 'coordinador') window.location.href = '/coordinador';
+      else if (rol === 'estudiante') window.location.href = '/estudiante';
+      else window.location.href = '/login';
+    }
+
     document.getElementById('loginForm').onsubmit = async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnLogin');
-      const errorMsg = document.getElementById('errorMsg');
+      const errorMsg = document.getElementById('loginError');
       btn.disabled = true;
       btn.textContent = 'Ingresando...';
       errorMsg.style.display = 'none';
 
       const formData = new FormData();
-      formData.append('email', document.getElementById('email').value);
-      formData.append('password', document.getElementById('password').value);
+      formData.append('email', document.getElementById('login-email').value);
+      formData.append('password', document.getElementById('login-password').value);
 
       try {
         const res = await fetch('/api/login', { method: 'POST', body: formData });
         const data = await res.json();
-
         if (res.ok) {
-          // Guardar token y datos en sessionStorage
-          sessionStorage.setItem('token', data.token);
-          sessionStorage.setItem('nombre', data.nombre);
-          sessionStorage.setItem('rol', data.rol);
-
-          // Redirigir según rol
-          if (data.rol === 'coordinador') {
-            window.location.href = '/coordinador';
-          } else if (data.rol === 'estudiante') {
-            window.location.href = '/estudiante';
-          } else {
-            window.location.href = '/';
-          }
+          guardarSesion(data);
+          redirigirPorRol(data.rol);
         } else {
+          errorMsg.textContent = data.error || 'Correo o contraseña incorrectos.';
           errorMsg.style.display = 'block';
           btn.disabled = false;
           btn.textContent = 'Iniciar sesión';
         }
-      } catch (err) {
-        errorMsg.style.display = 'block';
+      } catch (_) {
         errorMsg.textContent = 'Error de conexión. Verifica que el servidor esté activo.';
+        errorMsg.style.display = 'block';
         btn.disabled = false;
         btn.textContent = 'Iniciar sesión';
+      }
+    };
+
+    document.getElementById('registroForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnRegistro');
+      const errorMsg = document.getElementById('registroError');
+      btn.disabled = true;
+      btn.textContent = 'Creando cuenta...';
+      errorMsg.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('nombre', document.getElementById('reg-nombre').value);
+      formData.append('email', document.getElementById('reg-email').value);
+      formData.append('password', document.getElementById('reg-password').value);
+
+      try {
+        const res = await fetch('/api/registro', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+          guardarSesion(data);
+          redirigirPorRol(data.rol);
+        } else {
+          errorMsg.textContent = data.error || 'No se pudo crear la cuenta.';
+          errorMsg.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Crear cuenta';
+        }
+      } catch (_) {
+        errorMsg.textContent = 'Error de conexión. Verifica que el servidor esté activo.';
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Crear cuenta';
       }
     };
   </script>

@@ -25,6 +25,13 @@ class Sesion(Base):
     iniciada_en = Column(TIMESTAMP, server_default=func.now())
     finalizada_en = Column(TIMESTAMP, nullable=True)
 
+class SesionParticipante(Base):
+    __tablename__ = "participantes_sesion"
+    id = Column(Integer, primary_key=True, index=True)
+    sesion_id = Column(Integer, ForeignKey("sesiones.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    unido_en = Column(TIMESTAMP, server_default=func.now())
+
 class Transcripcion(Base):
     __tablename__ = "transcripciones"
     id = Column(Integer, primary_key=True, index=True)
@@ -39,7 +46,9 @@ class FraseRapida(Base):
     id = Column(Integer, primary_key=True, index=True)
     contenido = Column(String(255), nullable=False)
     dirigida_a = Column(Enum("coordinador", "estudiante"), nullable=False)
+    categoria = Column(String(100), nullable=False, default="General")
     activa = Column(Integer, default=1)
+    creado_en = Column(TIMESTAMP, server_default=func.now())
 
 class Sena(Base):
     __tablename__ = "senas"
@@ -56,4 +65,14 @@ class RegistroIA(Base):
     sesion_id = Column(Integer, ForeignKey("sesiones.id"), nullable=False)
     sena_detectada = Column(String(100))
     confianza = Column(Float)
+    creado_en = Column(TIMESTAMP, server_default=func.now())
+
+class Auditoria(Base):
+    __tablename__ = "auditoria"
+    id = Column(Integer, primary_key=True, index=True)
+    actor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    accion = Column(String(50), nullable=False)
+    detalle = Column(Text)
+    sesion_id = Column(Integer, ForeignKey("sesiones.id"), nullable=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     creado_en = Column(TIMESTAMP, server_default=func.now())

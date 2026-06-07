@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpeakingHands — Administración</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0F2744; --navy-mid: #1A3A5C;
+      --blue: #2563EB; --teal: #0D9488; --purple: #7C3AED;
+      --gray-bg: #F8FAFC; --gray-border: #E2E8F0;
+      --gray-muted: #94A3B8; --gray-text: #64748B;
+      --text: #0F172A; --danger: #EF4444; --success: #10B981;
+      --radius: 14px; --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; }
+
+    .topbar {
+      background: var(--navy); padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-title { font-size: 18px; font-weight: 600; color: white; }
+    .topbar-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+    .btn-outline {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+      color: white; border-radius: var(--radius-sm); padding: 8px 14px;
+      font-size: 13px; font-family: 'DM Sans'; cursor: pointer;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.2); }
+
+    .container { max-width: 1060px; margin: 0 auto; padding: 24px 20px 40px; }
+
+    .main-tabs {
+      display: flex; gap: 4px; background: white; border-radius: var(--radius);
+      padding: 5px; margin-bottom: 20px; box-shadow: var(--shadow);
+    }
+    .main-tab {
+      flex: 1; border: none; background: none; padding: 12px 16px;
+      font-size: 14px; font-weight: 500; font-family: 'DM Sans';
+      color: var(--gray-muted); border-radius: var(--radius-sm); cursor: pointer;
+    }
+    .main-tab.active { background: var(--navy); color: white; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .card-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--gray-border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--navy); }
+    .card-body { padding: 0; }
+
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      border: 1.5px solid var(--gray-border); background: white; border-radius: 20px;
+      padding: 6px 14px; font-size: 12px; font-family: 'DM Sans'; cursor: pointer; color: var(--gray-text);
+    }
+    .filter-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+    .data-row {
+      display: grid; gap: 12px; align-items: center; padding: 14px 20px;
+      border-bottom: 1px solid var(--gray-border); font-size: 14px;
+    }
+    .data-row:last-child { border-bottom: none; }
+    .data-row.header {
+      background: var(--gray-bg); font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-muted);
+    }
+
+    .row-usuarios { grid-template-columns: 1fr 1.2fr auto auto; }
+    .row-salas {
+      grid-template-columns: 52px 88px minmax(110px, 1fr) minmax(150px, 1.35fr) 48px 88px minmax(170px, auto);
+      align-items: start;
+    }
+    .row-salas.header { align-items: center; }
+    .row-salas.header span:last-child { text-align: right; }
+    .row-frases { grid-template-columns: 40px 1fr 110px 100px 72px 88px; }
+    .row-audit { grid-template-columns: 130px 140px 1fr 120px; }
+
+    .salas-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .salas-table { min-width: 820px; }
+    .cell-coord, .cell-estudiantes { min-width: 0; }
+    .cell-coord .name { word-break: break-word; }
+    .cell-msgs, .cell-estado { text-align: center; }
+    .row-salas.header .cell-msgs,
+    .row-salas.header .cell-estado { text-align: center; }
+    .cell-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .estudiantes-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+    .participante-tag {
+      display: inline-block;
+      max-width: 100%;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #F0FDF9;
+      color: #065F46;
+      border: 1px solid #99F6E4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .participante-tag.empty-state {
+      background: #F8FAFC;
+      color: var(--gray-muted);
+      border-color: var(--gray-border);
+      font-weight: 400;
+    }
+    .estudiantes-meta {
+      font-size: 11px;
+      color: var(--gray-muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+    .modal-participantes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 12px;
+    }
+    .modal-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px 16px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .modal-meta-grid strong { color: var(--navy); font-weight: 600; }
+
+    @media (max-width: 900px) {
+      .container { padding: 16px 12px 32px; }
+      .salas-toolbar { padding: 12px 16px; }
+    }
+
+    @media (max-width: 760px) {
+      .row-usuarios, .row-audit, .row-frases { grid-template-columns: 1fr; }
+      #usuarios-list .data-row.header,
+      #frases-list .data-row.header,
+      #audit-list .data-row.header { display: none; }
+      .salas-table { min-width: 0; }
+      .row-salas {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 14px;
+        padding: 16px 18px;
+        align-items: start;
+      }
+      .row-salas.header { display: none; }
+      .row-salas .cell-estudiantes { grid-column: 1 / -1; }
+      .row-salas .cell-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        padding-top: 4px;
+        border-top: 1px dashed var(--gray-border);
+        margin-top: 4px;
+      }
+      .row-salas [data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--gray-muted);
+        margin-bottom: 4px;
+      }
+      .cell-msgs, .cell-estado { text-align: left; }
+    }
+
+    .mono { font-family: 'DM Mono', monospace; font-size: 13px; }
+    .muted { font-size: 12px; color: var(--gray-muted); }
+    .name { font-weight: 500; color: var(--navy); }
+
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+    }
+    .badge.admin { background: #F3E8FF; color: var(--purple); }
+    .badge.coordinador { background: #EFF6FF; color: var(--blue); }
+    .badge.estudiante { background: #F0FDF9; color: var(--teal); }
+    .badge.activa { background: #D1FAE5; color: #065F46; }
+    .badge.finalizada { background: #F1F5F9; color: var(--gray-text); }
+
+    .badge.inactiva { background: #FEE2E2; color: var(--danger); }
+
+    .toggle-active {
+      border: none; background: none; cursor: pointer; font-size: 18px; padding: 4px;
+    }
+
+    select.rol-select, select.filter-select {
+      border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm);
+      padding: 7px 10px; font-size: 13px; font-family: 'DM Sans';
+    }
+
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .actions.icons { gap: 2px; flex-wrap: nowrap; justify-content: flex-end; }
+    .btn-sm {
+      border: 1.5px solid var(--gray-border); background: white; border-radius: var(--radius-sm);
+      padding: 6px 10px; font-size: 12px; font-family: 'DM Sans'; cursor: pointer;
+    }
+    .btn-sm:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-sm.danger:hover { border-color: var(--danger); color: var(--danger); }
+    .btn-icon {
+      background: none; border: none; cursor: pointer; padding: 6px 8px;
+      font-size: 16px; line-height: 1; color: var(--gray-muted); border-radius: var(--radius-sm);
+    }
+    .btn-icon:hover { background: var(--gray-bg); color: var(--navy); }
+    .btn-icon.edit:hover { color: var(--blue); }
+    .btn-icon.toggle:hover { color: var(--teal); }
+    .btn-icon.danger:hover { color: var(--danger); }
+    .btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .form-panel { padding: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm);
+      padding: 11px 12px; font-size: 14px; font-family: 'DM Sans';
+    }
+    .btn-primary {
+      width: 100%; background: var(--navy); color: white; border: none;
+      border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 500;
+      font-family: 'DM Sans'; cursor: pointer;
+    }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(15,39,68,0.5);
+      z-index: 300; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: var(--radius); width: 100%; max-width: 560px;
+      max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow);
+    }
+    .modal-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--gray-border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+    .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray-muted); }
+
+    .msg-item {
+      padding: 10px 12px; border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 13px;
+      border: 1px solid var(--gray-border);
+    }
+    .msg-item .msg-meta { font-size: 11px; color: var(--gray-muted); margin-bottom: 4px; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: white;
+      padding: 12px 18px; border-radius: var(--radius-sm); font-size: 13px;
+      opacity: 0; transition: opacity 0.25s; z-index: 400; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: var(--danger); }
+
+    .loading, .empty { text-align: center; padding: 40px 20px; color: var(--gray-muted); font-size: 14px; }
+    .you-tag { font-size: 10px; background: var(--navy); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+
+    .users-toolbar {
+      padding: 14px 20px; border-bottom: 1px solid var(--gray-border);
+      display: flex; flex-direction: column; gap: 12px; background: var(--gray-bg);
+    }
+    .search-wrap { position: relative; }
+    .search-wrap svg {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px; stroke: var(--gray-muted); fill: none; stroke-width: 2;
+    }
+    .search-input {
+      width: 100%; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm);
+      padding: 10px 12px 10px 38px; font-size: 14px; font-family: 'DM Sans'; outline: none;
+      background: white;
+    }
+    .search-input:focus { border-color: var(--blue); }
+    .search-input::placeholder { color: var(--gray-muted); }
+
+    .rol-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .rol-tab {
+      border: 1.5px solid var(--gray-border); background: white; border-radius: 20px;
+      padding: 6px 14px; font-size: 12px; font-family: 'DM Sans'; cursor: pointer;
+      color: var(--gray-text); display: flex; align-items: center; gap: 6px;
+    }
+    .rol-tab .count {
+      background: var(--gray-bg); color: var(--gray-muted); font-size: 10px;
+      font-weight: 600; padding: 2px 7px; border-radius: 10px; min-width: 20px; text-align: center;
+    }
+    .rol-tab.active { background: var(--navy); color: white; border-color: var(--navy); }
+    .rol-tab.active .count { background: rgba(255,255,255,0.2); color: white; }
+    .rol-tab.active[data-rol="admin"] { background: var(--purple); border-color: var(--purple); }
+    .rol-tab.active[data-rol="coordinador"] { background: var(--blue); border-color: var(--blue); }
+    .rol-tab.active[data-rol="estudiante"] { background: var(--teal); border-color: var(--teal); }
+
+    .rol-group { border-bottom: 1px solid var(--gray-border); }
+    .rol-group:last-child { border-bottom: none; }
+    .rol-group-header {
+      padding: 10px 20px; font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; display: flex; align-items: center; justify-content: space-between;
+    }
+    .rol-group-header[data-rol="admin"] { background: #F3E8FF; color: var(--purple); }
+    .rol-group-header[data-rol="coordinador"] { background: #EFF6FF; color: var(--blue); }
+    .rol-group-header[data-rol="estudiante"] { background: #F0FDF9; color: var(--teal); }
+    .rol-group-count { font-weight: 500; opacity: 0.75; }
+
+    .salas-toolbar {
+      padding: 14px 20px; border-bottom: 1px solid var(--gray-border);
+      display: flex; flex-direction: column; gap: 12px; background: var(--gray-bg);
+    }
+    .salas-toolbar-row {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div>
+      <div class="topbar-title">SpeakingHands — Admin</div>
+      <div class="topbar-sub" id="admin-sub">Panel de administración</div>
+    </div>
+    <button class="btn-outline" onclick="cerrarSesion()">Cerrar sesión</button>
+  </header>
+
+  <main class="container">
+    <nav class="main-tabs">
+      <button class="main-tab active" data-section="usuarios">Usuarios</button>
+      <button class="main-tab" data-section="salas">Salas</button>
+      <button class="main-tab" data-section="frases">Frases</button>
+      <button class="main-tab" data-section="auditoria">Auditoría</button>
+    </nav>
+
+    <!-- USUARIOS -->
+    <div class="section active" id="section-usuarios">
+      <div class="grid">
+        <section class="card">
+          <div class="card-header">
+            <span class="card-title">Usuarios registrados</span>
+            <span class="muted" id="user-count"></span>
+          </div>
+          <div class="users-toolbar">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" class="search-input" id="user-search" placeholder="Buscar por nombre o correo..." autocomplete="off">
+            </div>
+            <div class="rol-tabs" id="rol-tabs">
+              <button type="button" class="rol-tab active" data-rol="" onclick="filtrarUsuariosPorRol('', this)">Todos <span class="count" id="count-todos">0</span></button>
+              <button type="button" class="rol-tab" data-rol="admin" onclick="filtrarUsuariosPorRol('admin', this)">Administradores <span class="count" id="count-admin">0</span></button>
+              <button type="button" class="rol-tab" data-rol="coordinador" onclick="filtrarUsuariosPorRol('coordinador', this)">Coordinadores <span class="count" id="count-coord">0</span></button>
+              <button type="button" class="rol-tab" data-rol="estudiante" onclick="filtrarUsuariosPorRol('estudiante', this)">Estudiantes <span class="count" id="count-est">0</span></button>
+            </div>
+          </div>
+          <div class="card-body" id="users-list"><div class="loading">Cargando...</div></div>
+        </section>
+        <section class="card">
+          <div class="card-header"><span class="card-title">Crear usuario</span></div>
+          <form class="form-panel" id="createForm">
+            <div class="form-group"><label>Nombre</label><input type="text" id="new-nombre" required minlength="2"></div>
+            <div class="form-group"><label>Correo</label><input type="email" id="new-email" required></div>
+            <div class="form-group"><label>Contraseña</label><input type="password" id="new-password" required minlength="4"></div>
+            <div class="form-group">
+              <label>Rol</label>
+              <select id="new-rol">
+                <option value="coordinador">Coordinador</option>
+                <option value="estudiante">Estudiante</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary" id="btn-create">Crear usuario</button>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <!-- SALAS -->
+    <div class="section" id="section-salas">
+      <section class="card">
+        <div class="card-header">
+          <span class="card-title">Mantenedor de salas</span>
+          <span class="muted" id="salas-count"></span>
+        </div>
+        <div class="salas-toolbar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" class="search-input" id="sala-search" placeholder="Buscar por ID, código, coordinador o estudiante..." autocomplete="off">
+          </div>
+            <div class="salas-toolbar-row">
+            <div class="filters">
+              <button class="filter-btn active" data-estado="" onclick="filtrarSalas('', this)">Todas</button>
+              <button class="filter-btn" data-estado="activa" onclick="filtrarSalas('activa', this)">Activas</button>
+              <button class="filter-btn" data-estado="finalizada" onclick="filtrarSalas('finalizada', this)">Finalizadas</button>
+            </div>
+            <button type="button" class="btn-sm danger" id="btn-borrar-todas-salas" onclick="eliminarTodasSalas()">Borrar todo</button>
+          </div>
+        </div>
+        <div class="card-body" id="salas-list"><div class="loading">Cargando salas...</div></div>
+      </section>
+    </div>
+
+    <!-- FRASES RÁPIDAS -->
+    <div class="section" id="section-frases">
+      <div class="grid">
+        <section class="card">
+          <div class="card-header">
+            <span class="card-title">Frases rápidas</span>
+            <span class="muted" id="frases-count"></span>
+          </div>
+          <div class="users-toolbar">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" class="search-input" id="frase-search" placeholder="Buscar frase o categoría..." autocomplete="off">
+            </div>
+            <div class="rol-tabs">
+              <button type="button" class="rol-tab active" data-frase-rol="" onclick="filtrarFrasesPorRol('', this)">Todas</button>
+              <button type="button" class="rol-tab" data-frase-rol="coordinador" onclick="filtrarFrasesPorRol('coordinador', this)">Coordinador</button>
+              <button type="button" class="rol-tab" data-frase-rol="estudiante" onclick="filtrarFrasesPorRol('estudiante', this)">Estudiante</button>
+            </div>
+          </div>
+          <div class="card-body" id="frases-list"><div class="loading">Cargando...</div></div>
+        </section>
+        <section class="card">
+          <div class="card-header"><span class="card-title" id="frase-form-title">Agregar frase</span></div>
+          <form class="form-panel" id="fraseForm">
+            <input type="hidden" id="frase-edit-id" value="">
+            <div class="form-group">
+              <label>Texto de la frase</label>
+              <input type="text" id="frase-contenido" required minlength="2" maxlength="255" placeholder="Ej: ¿Me entiendes?">
+            </div>
+            <div class="form-group">
+              <label>Dirigida a</label>
+              <select id="frase-dirigida" required>
+                <option value="coordinador">Coordinador</option>
+                <option value="estudiante">Estudiante</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="frase-categoria">
+                <option value="Comprensión">Comprensión</option>
+                <option value="Ritmo">Ritmo</option>
+                <option value="Ánimo">Ánimo</option>
+                <option value="Apoyo">Apoyo</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer">
+                <input type="checkbox" id="frase-activa" checked> Activa (visible en la app)
+              </label>
+            </div>
+            <button type="submit" class="btn-primary" id="btn-frase-submit">Agregar frase</button>
+            <button type="button" class="btn-sm" id="btn-frase-cancel" style="width:100%;margin-top:8px;display:none" onclick="cancelarEdicionFrase()">Cancelar edición</button>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <!-- AUDITORÍA -->
+    <div class="section" id="section-auditoria">
+      <section class="card">
+        <div class="card-header">
+          <span class="card-title">Registro de auditoría</span>
+          <select class="filter-select" id="filtro-accion" onchange="cargarAuditoria()">
+            <option value="">Todas las acciones</option>
+            <option value="registro_usuario">Registro usuario</option>
+            <option value="admin_crear_usuario">Admin crear usuario</option>
+            <option value="admin_cambio_rol">Cambio de rol</option>
+            <option value="admin_eliminar_usuario">Eliminar usuario</option>
+            <option value="crear_sala">Crear sala</option>
+            <option value="cerrar_sala">Cerrar sala</option>
+            <option value="estudiante_unido">Estudiante unido</option>
+            <option value="admin_cerrar_sala">Admin cerrar sala</option>
+            <option value="admin_eliminar_sala">Admin eliminar sala</option>
+            <option value="admin_crear_frase">Crear frase</option>
+            <option value="admin_editar_frase">Editar frase</option>
+            <option value="admin_eliminar_frase">Eliminar frase</option>
+          </select>
+        </div>
+        <div class="card-body" id="audit-list"><div class="loading">Cargando auditoría...</div></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal detalle sala -->
+  <div class="modal-overlay" id="modal-sala">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="card-title" id="modal-sala-title">Detalle de sala</span>
+        <button class="modal-close" onclick="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-sala-body"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let currentUserId = null;
+    let filtroSalasEstado = '';
+    let todasSalas = [];
+    let busquedaSalas = '';
+    let todosUsuarios = [];
+    let filtroUsuariosRol = '';
+    let busquedaUsuarios = '';
+    let todasFrases = [];
+    let filtroFrasesRol = '';
+    let busquedaFrases = '';
+
+    const CATEGORIAS_FRASE = ['Comprensión', 'Ritmo', 'Ánimo', 'Apoyo', 'General'];
+
+    const ROLES_ORDEN = ['admin', 'coordinador', 'estudiante'];
+    const ROL_LABELS = { admin: 'Administradores', coordinador: 'Coordinadores', estudiante: 'Estudiantes' };
+
+    function authHeaders() {
+      return { 'Authorization': 'Bearer ' + sessionStorage.getItem('token') };
+    }
+
+    function showToast(msg, isError) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show' + (isError ? ' error' : '');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function rolBadge(rol) {
+      return `<span class="badge ${rol}">${rol}</span>`;
+    }
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s || '';
+      return d.innerHTML;
+    }
+
+    document.querySelectorAll('.main-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('section-' + tab.dataset.section).classList.add('active');
+        if (tab.dataset.section === 'salas') cargarSalas();
+        if (tab.dataset.section === 'frases') cargarFrases();
+        if (tab.dataset.section === 'auditoria') cargarAuditoria();
+      };
+    });
+
+    async function verificarAcceso() {
+      if (sessionStorage.getItem('rol') !== 'admin') {
+        window.location.href = '/login';
+        return false;
+      }
+      const res = await fetch('/api/me', { headers: authHeaders() });
+      if (!res.ok) { sessionStorage.clear(); window.location.href = '/login'; return false; }
+      const data = await res.json();
+      currentUserId = data.id;
+      document.getElementById('admin-sub').textContent = data.nombre + ' — Panel de administración';
+      return true;
+    }
+
+    function cerrarSesion() {
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
+
+    // ── Usuarios ─────────────────────────────────────────────
+    function filtrarUsuariosPorRol(rol, btn) {
+      filtroUsuariosRol = rol;
+      document.querySelectorAll('.rol-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderUsuarios();
+    }
+
+    function coincideBusqueda(u, q) {
+      if (!q) return true;
+      const n = (u.nombre || '').toLowerCase();
+      const e = (u.email || '').toLowerCase();
+      return n.includes(q) || e.includes(q);
+    }
+
+    function filaUsuario(u) {
+      const esYo = u.id === currentUserId;
+      return `<div class="data-row row-usuarios" data-id="${u.id}">
+        <div><div class="name">${escHtml(u.nombre)}${esYo ? '<span class="you-tag">Tú</span>' : ''}</div><div class="muted">${u.creado_en}</div></div>
+        <div class="mono">${escHtml(u.email)}</div>
+        <div>${esYo ? rolBadge(u.rol) : `<select class="rol-select" onchange="cambiarRol(${u.id}, this)" data-prev="${u.rol}">
+          <option value="estudiante" ${u.rol==='estudiante'?'selected':''}>Estudiante</option>
+          <option value="coordinador" ${u.rol==='coordinador'?'selected':''}>Coordinador</option>
+          <option value="admin" ${u.rol==='admin'?'selected':''}>Admin</option></select>`}</div>
+        <div><button class="btn-icon danger" onclick="eliminarUsuario(${u.id})" ${esYo?'disabled':''} title="Eliminar">🗑</button></div>
+      </div>`;
+    }
+
+    function actualizarContadoresUsuarios(lista) {
+      const porRol = { admin: 0, coordinador: 0, estudiante: 0 };
+      lista.forEach(u => { if (porRol[u.rol] !== undefined) porRol[u.rol]++; });
+      document.getElementById('count-todos').textContent = lista.length;
+      document.getElementById('count-admin').textContent = porRol.admin;
+      document.getElementById('count-coord').textContent = porRol.coordinador;
+      document.getElementById('count-est').textContent = porRol.estudiante;
+      document.getElementById('user-count').textContent =
+        lista.length + ' usuario(s)' + (busquedaUsuarios || filtroUsuariosRol ? ' (filtrados)' : '');
+    }
+
+    function renderUsuarios() {
+      const c = document.getElementById('users-list');
+      const q = busquedaUsuarios.trim().toLowerCase();
+      let filtrados = todosUsuarios.filter(u => coincideBusqueda(u, q));
+
+      if (filtroUsuariosRol) {
+        filtrados = filtrados.filter(u => u.rol === filtroUsuariosRol);
+      }
+
+      actualizarContadoresUsuarios(todosUsuarios.filter(u => coincideBusqueda(u, q)));
+
+      if (!filtrados.length) {
+        c.innerHTML = '<div class="empty">' +
+          (q || filtroUsuariosRol ? 'No hay usuarios que coincidan con el filtro' : 'Sin usuarios') +
+          '</div>';
+        return;
+      }
+
+      let html = '';
+
+      if (!filtroUsuariosRol) {
+        ROLES_ORDEN.forEach(rol => {
+          const grupo = filtrados.filter(u => u.rol === rol);
+          if (!grupo.length) return;
+          html += `<div class="rol-group">
+            <div class="rol-group-header" data-rol="${rol}">
+              <span>${ROL_LABELS[rol]}</span>
+              <span class="rol-group-count">${grupo.length}</span>
+            </div>
+            <div class="data-row header row-usuarios"><span>Usuario</span><span>Correo</span><span>Rol</span><span></span></div>
+            ${grupo.map(filaUsuario).join('')}
+          </div>`;
+        });
+      } else {
+        html += `<div class="data-row header row-usuarios"><span>Usuario</span><span>Correo</span><span>Rol</span><span></span></div>`;
+        html += filtrados.map(filaUsuario).join('');
+      }
+
+      c.innerHTML = html;
+    }
+
+    async function cargarUsuarios() {
+      const c = document.getElementById('users-list');
+      c.innerHTML = '<div class="loading">Cargando...</div>';
+      const res = await fetch('/api/admin/usuarios', { headers: authHeaders() });
+      if (!res.ok) return;
+      todosUsuarios = await res.json();
+      renderUsuarios();
+    }
+
+    document.getElementById('user-search').addEventListener('input', (e) => {
+      busquedaUsuarios = e.target.value;
+      renderUsuarios();
+    });
+
+    async function cambiarRol(userId, select) {
+      const prev = select.dataset.prev;
+      const fd = new FormData(); fd.append('rol', select.value);
+      const res = await fetch(`/api/admin/usuarios/${userId}/rol`, { method: 'PATCH', headers: authHeaders(), body: fd });
+      const data = await res.json();
+      if (res.ok) { select.dataset.prev = select.value; showToast(`Rol actualizado: ${data.nombre}`); cargarUsuarios(); cargarAuditoria(); }
+      else { select.value = prev; showToast(data.error, true); }
+    }
+
+    async function eliminarUsuario(userId) {
+      if (!confirm('¿Eliminar este usuario?')) return;
+      const res = await fetch(`/api/admin/usuarios/${userId}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { showToast('Usuario eliminado'); cargarUsuarios(); cargarAuditoria(); }
+      else showToast(data.error, true);
+    }
+
+    document.getElementById('createForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData();
+      fd.append('nombre', document.getElementById('new-nombre').value);
+      fd.append('email', document.getElementById('new-email').value);
+      fd.append('password', document.getElementById('new-password').value);
+      fd.append('rol', document.getElementById('new-rol').value);
+      const res = await fetch('/api/admin/usuarios', { method: 'POST', headers: authHeaders(), body: fd });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Usuario creado: ${data.nombre}`);
+        e.target.reset();
+        document.getElementById('new-rol').value = 'coordinador';
+        cargarUsuarios(); cargarAuditoria();
+      } else showToast(data.error, true);
+    };
+
+    // ── Salas ──────────────────────────────────────────────────
+    function filtrarSalas(estado, btn) {
+      filtroSalasEstado = estado;
+      document.querySelectorAll('#section-salas .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      cargarSalas();
+    }
+
+    function coincideBusquedaSala(s, q) {
+      if (!q) return true;
+      const id = String(s.id);
+      const codigo = (s.codigo || '').toLowerCase();
+      const coord = (s.coordinador || '').toLowerCase();
+      const est = (s.estudiante || '').toLowerCase();
+      const participantes = (s.participantes || []).join(' ').toLowerCase();
+      return id.includes(q) || codigo.includes(q) || coord.includes(q) || est.includes(q) || participantes.includes(q);
+    }
+
+    function nombresEstudiantesSala(s) {
+      if (Array.isArray(s.participantes) && s.participantes.length) return s.participantes;
+      return s.estudiante ? [s.estudiante] : [];
+    }
+
+    function renderEstudiantesCell(s) {
+      const nombres = nombresEstudiantesSala(s);
+      if (!nombres.length) {
+        return '<div class="estudiantes-tags"><span class="participante-tag empty-state">Sin unir</span></div>';
+      }
+      const tags = nombres.map(n =>
+        `<span class="participante-tag" title="${escHtml(n)}">${escHtml(n)}</span>`
+      ).join('');
+      let meta = '';
+      if (typeof s.estudiantes_conectados === 'number' && s.estado === 'activa') {
+        meta = `<div class="estudiantes-meta">${s.estudiantes_conectados} en línea · ${nombres.length} registrado${nombres.length !== 1 ? 's' : ''}</div>`;
+      } else if (nombres.length > 1) {
+        meta = `<div class="estudiantes-meta">${nombres.length} estudiantes</div>`;
+      }
+      return `<div class="estudiantes-tags">${tags}</div>${meta}`;
+    }
+
+    function renderSalas() {
+      const c = document.getElementById('salas-list');
+      const q = busquedaSalas.trim().toLowerCase();
+      const salas = todasSalas.filter(s => coincideBusquedaSala(s, q));
+
+      const totalLabel = todasSalas.length + ' sala(s)';
+      document.getElementById('salas-count').textContent =
+        q ? `${salas.length} de ${totalLabel}` : totalLabel;
+
+      if (!salas.length) {
+        c.innerHTML = '<div class="empty">' +
+          (q ? 'No hay salas que coincidan con la búsqueda' : 'No hay salas registradas') +
+          '</div>';
+        return;
+      }
+
+      let html = `<div class="salas-table-wrap"><div class="salas-table">
+        <div class="data-row header row-salas">
+          <span>ID</span><span>Código</span><span>Coordinador</span><span>Estudiantes</span>
+          <span class="cell-msgs">Msgs</span><span class="cell-estado">Estado</span><span>Acciones</span>
+        </div>`;
+      salas.forEach(s => {
+        html += `<div class="data-row row-salas">
+          <div class="muted mono" data-label="ID">#${s.id}</div>
+          <div class="mono name" data-label="Código">${escHtml(s.codigo)}</div>
+          <div class="cell-coord" data-label="Coordinador">${escHtml(s.coordinador || '—')}<div class="muted">${s.iniciada_en}</div></div>
+          <div class="cell-estudiantes" data-label="Estudiantes">${renderEstudiantesCell(s)}</div>
+          <div class="cell-msgs" data-label="Mensajes">${s.mensajes}</div>
+          <div class="cell-estado" data-label="Estado"><span class="badge ${s.estado}">${s.estado}</span></div>
+          <div class="cell-actions actions" data-label="Acciones">
+            <button class="btn-sm" onclick="verSala(${s.id})">Ver</button>
+            ${s.estado === 'activa' ? `<button class="btn-sm" onclick="cerrarSala(${s.id})">Cerrar</button>` : ''}
+            <button class="btn-sm danger" onclick="eliminarSala(${s.id})">Eliminar</button>
+          </div>
+        </div>`;
+      });
+      html += '</div></div>';
+      c.innerHTML = html;
+    }
+
+    async function cargarSalas() {
+      const c = document.getElementById('salas-list');
+      c.innerHTML = '<div class="loading">Cargando salas...</div>';
+      const url = filtroSalasEstado ? `/api/admin/sesiones?estado=${filtroSalasEstado}` : '/api/admin/sesiones';
+      const res = await fetch(url, { headers: authHeaders() });
+      if (!res.ok) { c.innerHTML = '<div class="empty">Error al cargar</div>'; return; }
+      todasSalas = await res.json();
+      renderSalas();
+    }
+
+    document.getElementById('sala-search').addEventListener('input', (e) => {
+      busquedaSalas = e.target.value;
+      renderSalas();
+    });
+
+    async function verSala(id) {
+      const res = await fetch(`/api/admin/sesiones/${id}`, { headers: authHeaders() });
+      if (!res.ok) { showToast('No se pudo cargar la sala', true); return; }
+      const s = await res.json();
+      const nombres = nombresEstudiantesSala(s);
+      document.getElementById('modal-sala-title').textContent = `Sala ${s.codigo}`;
+      const tagsEst = nombres.length
+        ? nombres.map(n => `<span class="participante-tag">${escHtml(n)}</span>`).join('')
+        : '<span class="participante-tag empty-state">Ninguno</span>';
+      let body = `
+        <div class="modal-meta-grid">
+          <div><span class="muted">Coordinador</span><br><strong>${escHtml(s.coordinador || '—')}</strong></div>
+          <div><span class="muted">Estado</span><br><span class="badge ${s.estado}">${s.estado}</span></div>
+          <div><span class="muted">Mensajes</span><br><strong>${s.mensajes}</strong></div>
+          <div><span class="muted">Periodo</span><br><strong>${s.iniciada_en} → ${s.finalizada_en || 'En curso'}</strong></div>
+        </div>
+        <div class="muted" style="margin-bottom:6px">Estudiantes (${nombres.length})${s.estado === 'activa' && typeof s.estudiantes_conectados === 'number' ? ` · ${s.estudiantes_conectados} en línea` : ''}</div>
+        <div class="modal-participantes">${tagsEst}</div>`;
+      if (s.transcripciones && s.transcripciones.length) {
+        body += '<div style="margin-top:8px;border-top:1px solid var(--gray-border);padding-top:12px">';
+        s.transcripciones.forEach(t => {
+          body += `<div class="msg-item"><div class="msg-meta">${t.fecha} · ${escHtml(t.usuario)} · ${t.tipo}</div>${escHtml(t.contenido)}</div>`;
+        });
+        body += '</div>';
+      } else {
+        body += '<div class="empty">Sin mensajes en esta sesión</div>';
+      }
+      document.getElementById('modal-sala-body').innerHTML = body;
+      document.getElementById('modal-sala').classList.add('open');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modal-sala').classList.remove('open');
+    }
+
+    async function cerrarSala(id) {
+      if (!confirm('¿Forzar cierre de esta sala activa?')) return;
+      const res = await fetch(`/api/admin/sesiones/${id}/cerrar`, { method: 'PATCH', headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { showToast(`Sala ${data.codigo} cerrada`); cargarSalas(); cargarAuditoria(); }
+      else showToast(data.error, true);
+    }
+
+    async function eliminarSala(id) {
+      const sala = todasSalas.find(s => s.id === id);
+      const codigo = sala ? sala.codigo : ('#' + id);
+      if (!confirm(`¿Eliminar la sala ${codigo} y todos sus mensajes?`)) return;
+      try {
+        const res = await fetch(`/api/admin/sesiones/${id}`, { method: 'DELETE', headers: authHeaders() });
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (res.ok) {
+          showToast('Sala eliminada');
+          await cargarSalas();
+          cargarAuditoria();
+        } else {
+          showToast(data.error || 'No se pudo eliminar la sala', true);
+        }
+      } catch (_) {
+        showToast('Error de conexión al eliminar la sala', true);
+      }
+    }
+
+    function salasVisiblesParaBorrado() {
+      const q = busquedaSalas.trim().toLowerCase();
+      return todasSalas.filter(s => coincideBusquedaSala(s, q));
+    }
+
+    async function eliminarTodasSalas() {
+      const salas = salasVisiblesParaBorrado();
+      if (!salas.length) {
+        showToast('No hay salas para eliminar', true);
+        return;
+      }
+      const q = busquedaSalas.trim();
+      let detalle = q
+        ? `${salas.length} sala(s) que coinciden con la búsqueda`
+        : filtroSalasEstado === 'activa'
+          ? `${salas.length} sala(s) activa(s)`
+          : filtroSalasEstado === 'finalizada'
+            ? `${salas.length} sala(s) finalizada(s)`
+            : `${salas.length} sala(s) en total`;
+      if (!confirm(`¿Eliminar ${detalle}? Se borrarán también todos sus mensajes. Esta acción no se puede deshacer.`)) {
+        return;
+      }
+      const btn = document.getElementById('btn-borrar-todas-salas');
+      if (btn) { btn.disabled = true; btn.textContent = 'Eliminando…'; }
+      try {
+        const params = new URLSearchParams();
+        params.set('ids', salas.map(s => s.id).join(','));
+        const res = await fetch(`/api/admin/sesiones?${params}`, { method: 'DELETE', headers: authHeaders() });
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (res.ok) {
+          showToast(`${data.eliminadas || salas.length} sala(s) eliminada(s)`);
+          await cargarSalas();
+          cargarAuditoria();
+        } else {
+          showToast(data.error || 'No se pudo completar el borrado', true);
+        }
+      } catch (_) {
+        showToast('Error de conexión al eliminar salas', true);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Borrar todo'; }
+      }
+    }
+
+    // ── Frases rápidas ─────────────────────────────────────────
+    function filtrarFrasesPorRol(rol, btn) {
+      filtroFrasesRol = rol;
+      document.querySelectorAll('#section-frases .rol-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderFrases();
+    }
+
+    function coincideBusquedaFrase(f, q) {
+      if (!q) return true;
+      return (f.contenido || '').toLowerCase().includes(q)
+        || (f.categoria || '').toLowerCase().includes(q);
+    }
+
+    function filaFrase(f) {
+      return `<div class="data-row row-frases" data-id="${f.id}">
+        <div class="muted mono">#${f.id}</div>
+        <div><div class="name">${escHtml(f.contenido)}</div></div>
+        <div class="muted">${escHtml(f.categoria)}</div>
+        <div>${rolBadge(f.dirigida_a)}</div>
+        <div><span class="badge ${f.activa ? 'activa' : 'inactiva'}">${f.activa ? 'activa' : 'off'}</span></div>
+        <div class="actions icons">
+          <button class="btn-icon edit" onclick="editarFrase(${f.id})" title="Editar">✏️</button>
+          <button class="btn-icon toggle" onclick="toggleFraseActiva(${f.id}, ${f.activa ? 0 : 1})" title="${f.activa ? 'Desactivar' : 'Activar'}">${f.activa ? '⏸' : '▶'}</button>
+          <button class="btn-icon danger" onclick="eliminarFrase(${f.id})" title="Eliminar">🗑</button>
+        </div>
+      </div>`;
+    }
+
+    function renderFrases() {
+      const c = document.getElementById('frases-list');
+      const q = busquedaFrases.trim().toLowerCase();
+      let lista = todasFrases.filter(f => coincideBusquedaFrase(f, q));
+      if (filtroFrasesRol) lista = lista.filter(f => f.dirigida_a === filtroFrasesRol);
+
+      document.getElementById('frases-count').textContent =
+        lista.length + ' de ' + todasFrases.length + ' frase(s)';
+
+      if (!lista.length) {
+        c.innerHTML = '<div class="empty">' + (q || filtroFrasesRol ? 'Sin resultados' : 'No hay frases') + '</div>';
+        return;
+      }
+
+      let html = `<div class="data-row header row-frases"><span>ID</span><span>Frase</span><span>Categoría</span><span>Rol</span><span>Estado</span><span>Acciones</span></div>`;
+
+      if (!filtroFrasesRol) {
+        ['coordinador', 'estudiante'].forEach(rol => {
+          const grupo = lista.filter(f => f.dirigida_a === rol);
+          if (!grupo.length) return;
+          html += `<div class="rol-group"><div class="rol-group-header" data-rol="${rol}">
+            <span>${rol === 'coordinador' ? 'Frases para coordinador' : 'Frases para estudiante'}</span>
+            <span class="rol-group-count">${grupo.length}</span></div>`;
+          html += grupo.map(filaFrase).join('') + '</div>';
+        });
+      } else {
+        html += lista.map(filaFrase).join('');
+      }
+      c.innerHTML = html;
+    }
+
+    async function cargarFrases() {
+      document.getElementById('frases-list').innerHTML = '<div class="loading">Cargando...</div>';
+      const res = await fetch('/api/admin/frases', { headers: authHeaders() });
+      if (!res.ok) return;
+      todasFrases = await res.json();
+      renderFrases();
+    }
+
+    document.getElementById('frase-search').addEventListener('input', (e) => {
+      busquedaFrases = e.target.value;
+      renderFrases();
+    });
+
+    function cancelarEdicionFrase() {
+      document.getElementById('frase-edit-id').value = '';
+      document.getElementById('fraseForm').reset();
+      document.getElementById('frase-activa').checked = true;
+      document.getElementById('frase-form-title').textContent = 'Agregar frase';
+      document.getElementById('btn-frase-submit').textContent = 'Agregar frase';
+      document.getElementById('btn-frase-cancel').style.display = 'none';
+    }
+
+    function editarFrase(id) {
+      const f = todasFrases.find(x => x.id === id);
+      if (!f) return;
+      document.getElementById('frase-edit-id').value = f.id;
+      document.getElementById('frase-contenido').value = f.contenido;
+      document.getElementById('frase-dirigida').value = f.dirigida_a;
+      document.getElementById('frase-categoria').value = CATEGORIAS_FRASE.includes(f.categoria) ? f.categoria : 'General';
+      document.getElementById('frase-activa').checked = f.activa;
+      document.getElementById('frase-form-title').textContent = 'Editar frase #' + f.id;
+      document.getElementById('btn-frase-submit').textContent = 'Guardar cambios';
+      document.getElementById('btn-frase-cancel').style.display = 'block';
+      document.getElementById('frase-contenido').focus();
+    }
+
+    async function toggleFraseActiva(id, activa) {
+      const f = todasFrases.find(x => x.id === id);
+      if (!f) return;
+      const fd = new FormData();
+      fd.append('contenido', f.contenido);
+      fd.append('dirigida_a', f.dirigida_a);
+      fd.append('categoria', f.categoria);
+      fd.append('activa', activa);
+      const res = await fetch(`/api/admin/frases/${id}`, { method: 'PATCH', headers: authHeaders(), body: fd });
+      const data = await res.json();
+      if (res.ok) { showToast(activa ? 'Frase activada' : 'Frase desactivada'); cargarFrases(); cargarAuditoria(); }
+      else showToast(data.error, true);
+    }
+
+    async function eliminarFrase(id) {
+      if (!confirm('¿Eliminar esta frase?')) return;
+      const res = await fetch(`/api/admin/frases/${id}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { showToast('Frase eliminada'); cancelarEdicionFrase(); cargarFrases(); cargarAuditoria(); }
+      else showToast(data.error, true);
+    }
+
+    document.getElementById('fraseForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('frase-edit-id').value;
+      const fd = new FormData();
+      fd.append('contenido', document.getElementById('frase-contenido').value);
+      fd.append('dirigida_a', document.getElementById('frase-dirigida').value);
+      fd.append('categoria', document.getElementById('frase-categoria').value);
+      fd.append('activa', document.getElementById('frase-activa').checked ? 1 : 0);
+
+      const url = editId ? `/api/admin/frases/${editId}` : '/api/admin/frases';
+      const method = editId ? 'PATCH' : 'POST';
+      const res = await fetch(url, { method, headers: authHeaders(), body: fd });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(editId ? 'Frase actualizada' : 'Frase creada');
+        cancelarEdicionFrase();
+        cargarFrases();
+        cargarAuditoria();
+      } else showToast(data.error, true);
+    };
+
+    // ── Auditoría ──────────────────────────────────────────────
+    const ACCION_LABELS = {
+      registro_usuario: 'Registro',
+      admin_crear_usuario: 'Crear usuario',
+      admin_cambio_rol: 'Cambio rol',
+      admin_eliminar_usuario: 'Eliminar usuario',
+      crear_sala: 'Crear sala',
+      cerrar_sala: 'Cerrar sala',
+      estudiante_unido: 'Estudiante unido',
+      admin_cerrar_sala: 'Admin cerrar',
+      admin_eliminar_sala: 'Admin eliminar',
+      admin_crear_frase: 'Crear frase',
+      admin_editar_frase: 'Editar frase',
+      admin_eliminar_frase: 'Eliminar frase',
+    };
+
+    async function cargarAuditoria() {
+      const c = document.getElementById('audit-list');
+      c.innerHTML = '<div class="loading">Cargando...</div>';
+      const accion = document.getElementById('filtro-accion').value;
+      const url = accion ? `/api/admin/auditoria?accion=${accion}` : '/api/admin/auditoria';
+      const res = await fetch(url, { headers: authHeaders() });
+      if (!res.ok) { c.innerHTML = '<div class="empty">Error al cargar</div>'; return; }
+      const items = await res.json();
+      if (!items.length) { c.innerHTML = '<div class="empty">Sin registros de auditoría</div>'; return; }
+
+      let html = `<div class="data-row header row-audit"><span>Fecha</span><span>Acción</span><span>Detalle</span><span>Actor</span></div>`;
+      items.forEach(a => {
+        html += `<div class="data-row row-audit">
+          <div class="muted">${a.creado_en}</div>
+          <div><span class="badge badge-accion">${ACCION_LABELS[a.accion] || a.accion}</span></div>
+          <div style="font-size:13px;line-height:1.4">${escHtml(a.detalle)}${a.sesion_id ? ` <span class="muted">(#${a.sesion_id})</span>` : ''}</div>
+          <div class="name" style="font-size:13px">${escHtml(a.actor)}</div>
+        </div>`;
+      });
+      c.innerHTML = html;
+    }
+
+    document.getElementById('modal-sala').onclick = (e) => {
+      if (e.target.id === 'modal-sala') cerrarModal();
+    };
+
+    (async () => {
+      if (await verificarAcceso()) cargarUsuarios();
+    })();
+  </script>
+</body>
+</html>
