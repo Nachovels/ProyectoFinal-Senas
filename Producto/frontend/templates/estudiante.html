@@ -125,10 +125,8 @@
         <div class="cam-frame">
           <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
           <div class="cam-corner bl"></div><div class="cam-corner br"></div>
-          <div class="cam-placeholder">
-            <div class="cam-icon">✋</div>
-            <div class="cam-text">Módulo IA — en desarrollo</div>
-          </div>
+          <video id="videoElement" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); position: absolute; z-index: 1; border-radius: 8px;"></video>
+          <canvas id="canvasElement" width="640" height="480" style="display:none;"></canvas>
         </div>
         <div class="cam-bottom">
           <div class="cam-label">Detección MediaPipe</div>
@@ -327,6 +325,43 @@
       } catch(e) {
         c.innerHTML = '<div class="historial-empty"><div class="icon">⚠️</div><div>Error al cargar</div></div>';
       }
+    }
+
+    // --- LÓGICA DE CÁMARA E INTELIGENCIA ARTIFICIAL ---
+    const video = document.getElementById('videoElement');
+    const canvas = document.getElementById('canvasElement');
+    const ctx = canvas.getContext('2d');
+    const senaDetectada = document.getElementById('senaDetectada');
+    
+    let wsVideo;
+
+    navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+      .then(stream => {
+        video.srcObject = stream;
+        iniciarIA();
+      })
+      .catch(err => {
+        senaDetectada.textContent = "Error de cámara";
+        console.error(err);
+      });
+
+    function iniciarIA() {
+      wsVideo = new WebSocket("ws://localhost:8000/ws/video");
+      
+      wsVideo.onopen = () => {
+        senaDetectada.textContent = "IA Conectada. Esperando...";
+        setInterval(() => {
+          if (wsVideo.readyState === WebSocket.OPEN) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const base64Data = canvas.toDataURL('image/jpeg', 0.5);
+            wsVideo.send(base64Data);
+          }
+        }, 33); // Aumentado a ~30 FPS para que coincida con el entrenamiento
+      };
+
+      wsVideo.onmessage = (event) => {
+        senaDetectada.textContent = event.data;
+      };
     }
   </script>
 </body>
