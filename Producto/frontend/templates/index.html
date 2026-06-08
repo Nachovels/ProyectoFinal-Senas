@@ -956,26 +956,26 @@
         c.innerHTML = '<div class="loading">Cargando...</div>';
         try {
           const res = await fetch("/api/historial");
-          const sesiones = await res.json();
+          const sesiones = (await res.json()).filter(
+            (s) => s.mensajes && s.mensajes.length > 0,
+          );
           if (!sesiones.length) {
             c.innerHTML =
-              '<div class="historial-empty"><div class="icon">📋</div><div>No hay sesiones registradas</div></div>';
+              '<div class="historial-empty"><div class="icon">📋</div><div>No hay conversaciones registradas</div></div>';
             return;
           }
           c.innerHTML = "";
           sesiones.forEach((s) => {
             const div = document.createElement("div");
             div.className = "historial-sesion";
-            const msgs =
-              s.mensajes
-                .map(
-                  (m) =>
-                    `<div class="historial-msg ${m.tipo}" style="display:flex;flex-direction:column">
+            const msgs = s.mensajes
+              .map(
+                (m) =>
+                  `<div class="historial-msg ${m.tipo}" style="display:flex;flex-direction:column">
               <div class="historial-hora">${m.hora}</div>${m.contenido}
             </div>`,
-                )
-                .join("") ||
-              '<div style="color:#94A3B8;font-size:13px">Sin mensajes</div>';
+              )
+              .join("");
             div.innerHTML = `
             <div class="historial-header">
               <div class="historial-fecha">📅 ${s.iniciada_en}</div>

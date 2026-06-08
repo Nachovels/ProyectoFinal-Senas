@@ -1,11 +1,31 @@
+# --- Backend Python (SpeakingHands) ---
 Producto/backend/venv/
+Producto/backend/.venv/
+Producto/backend/.venv-freeze/
+Producto/backend/**/__pycache__/
+Producto/backend/**/*.py[cod]
+Producto/backend/.env
+Producto/backend/.env.*
+!Producto/backend/.env.example
+Producto/backend/models/whisper/
 
-# Ignorar logs de entrenamiento
+# --- Pipeline ML (señas) ---
 Producto/backend/ml_pipeline/Logs/
-
-# Ignorar datasets locales
 Producto/backend/ml_pipeline/dataset_sequences/
 Producto/backend/ml_pipeline/dataset_static/
+Producto/backend/ml_pipeline/*.h5
+Producto/backend/ml_pipeline/**/*.npy
 
 # (Opcional) Ignorar modelos pesados si pesan muchos MBs
 # *.h5
+# Modelos entrenados (pesados)
+*.h5
+
+# --- Sistema / IDE ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
