@@ -1,0 +1,13 @@
+# SpeakingHands — Pipeline ML (opcional)
+# Entrenamiento y prueba de reconocimiento de señas (ml_pipeline/)
+#
+# Instalación (además de requirements.txt):
+#   pip install -r requirements-ml.txt
+#
+# Scripts: collect_data.py, train_model.py, test_model.py, migrate_data.py
+
+numpy>=1.24,<3
+opencv-python>=4.8
+mediapipe>=0.10
+scikit-learn>=1.3
+tensorflow>=2.15
