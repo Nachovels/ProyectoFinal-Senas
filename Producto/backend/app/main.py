@@ -28,11 +28,9 @@ import random
 import string
 import threading
 
-# --- NUEVAS LIBRERÍAS PARA LLM ---
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-# Cargar clave secreta y configurar Gemini
 load_dotenv()
 try:
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -43,7 +41,6 @@ except Exception as e:
 
 app = FastAPI()
 
-# --- CONNECTION MANAGER PARA CHATS ---
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -66,7 +63,6 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-# --- RUTAS DE DIRECTORIOS ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend", "templates")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
@@ -92,7 +88,6 @@ def startup_precargar_voz():
     _backfill_participantes()
     threading.Thread(target=_precargar_whisper_al_inicio, daemon=True).start()
 
-# ── Dependencias de autenticación ─────────────────────────────
 def requiere_auth(authorization: Optional[str] = Header(None)) -> dict:
     token = extraer_bearer(authorization)
     usuario = usuario_desde_token(token)
@@ -107,7 +102,6 @@ def requiere_rol(rol: str):
         return usuario
     return dependencia
 
-# ── Seed de usuarios demo ──────────────────────────────────────
 def asegurar_usuarios_demo():
     db = SessionLocal()
     try:
@@ -133,8 +127,6 @@ def asegurar_usuarios_demo():
         db.commit()
     finally:
         db.close()
-
-asegurar_usuarios_demo()
 
 FRASES_DEMO = [
     ("¿Me entiendes?", "coordinador", "Comprensión"),
@@ -191,9 +183,6 @@ def asegurar_frases_demo():
     finally:
         db.close()
 
-asegurar_frases_demo()
-
-# ── Generador de código ────────────────────────────────────────
 def generar_codigo():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
@@ -213,14 +202,13 @@ def registrar_auditoria(
         sesion_id=sesion_id,
     ))
 
-# ── Conexiones activas (varias salas en paralelo) ───────────────
 class SalaActiva:
     def __init__(self, sesion_id: int, codigo: str, coordinador_id: int):
         self.sesion_id = sesion_id
         self.codigo = codigo.upper()
         self.coordinador_id = coordinador_id
         self.coordinador: WebSocket | None = None
-        self.estudiantes: dict = {}  # WebSocket -> {"id": int, "nombre": str}
+        self.estudiantes: dict = {}  
 
 
 class SalaManager:
@@ -365,7 +353,6 @@ async def _notificar_sesion_terminada_estudiantes(sesion_id: int, mensaje: str):
         except Exception:
             pass
 
-# ── Rutas HTML ─────────────────────────────────────────────────
 @app.get("/")
 async def root():
     return RedirectResponse(url="/login")
@@ -380,13 +367,11 @@ async def coordinador_page():
     with open("../frontend/templates/coordinador.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
-# --- CARGAR IA ---
 print("Cargando modelo de Visión Artificial (LSTM)...")
 model = load_model(MODEL_PATH)
 letters = np.array(sorted([f for f in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, f))]))
 print(f"Modelo cargado. Clases detectadas: {letters}")
 
-# --- UTILIDADES MEDIAPIPE ---
 mp_holistic = mp.solutions.holistic
 
 def extract_keypoints(results):
@@ -449,7 +434,6 @@ def normalize_features(frame_data):
         
     return new_data
 
-# --- FASTAPI RUTAS HTTP ---
 @app.get("/estudiante")
 async def get_estudiante(request: Request):
     return templates.TemplateResponse(request=request, name="estudiante.html")
@@ -458,7 +442,6 @@ async def get_estudiante(request: Request):
 async def get_index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
-# --- FASTAPI RUTAS WEBSOCKET (CHATS) ---
 @app.websocket("/ws/estudiante")
 async def websocket_estudiante(websocket: WebSocket):
     await manager.connect(websocket)
@@ -479,7 +462,6 @@ async def websocket_coordinador(websocket: WebSocket):
     except Exception:
         manager.disconnect(websocket)
 
-# --- FASTAPI RUTA WEBSOCKET (IA VIDEO) ---
 @app.websocket("/ws/video")
 async def websocket_video_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -489,11 +471,9 @@ async def websocket_video_endpoint(websocket: WebSocket):
     threshold = 0.8
     frame_counter = 0
     
-    # Filtro de Estabilidad (Debounce)
     consecutive_predictions = []
-    required_consecutive = 7
+    required_consecutive = 3 # REDUCIDO DE 7 A 3: Hace que la IA sea el doble de rápida al confirmar una seña
     
-    # --- VARIABLES PARA EL BUFFER DEL LLM ---
     palabras_buffer = []
     ultima_vez_visto = time.time()
     procesando_llm = False
@@ -503,12 +483,11 @@ async def websocket_video_endpoint(websocket: WebSocket):
             while True:
                 data = await websocket.receive_text()
                 
-                # --- LÓGICA DEL TEMPORIZADOR PARA LLM ---
                 if len(palabras_buffer) > 0 and not procesando_llm:
                     tiempo_inactivo = time.time() - ultima_vez_visto
                     if tiempo_inactivo > 2.5: 
                         procesando_llm = True
-                        await websocket.send_text(f"✍️ TRADUCIENDO FRASE: {' '.join(palabras_buffer)}...")
+                        await websocket.send_text(f"TRADUCIENDO FRASE: {' '.join(palabras_buffer)}...")
                         
                         prompt = f"Eres un intérprete de lengua de señas en una universidad de Chile. Toma estas palabras sueltas detectadas por visión artificial y arma una oración gramaticalmente correcta, natural y formal en español. Solo entrega la oración final, nada de explicaciones extras. Palabras: {', '.join(palabras_buffer)}"
                         
@@ -516,10 +495,8 @@ async def websocket_video_endpoint(websocket: WebSocket):
                             respuesta = llm_model.generate_content(prompt)
                             frase_final = respuesta.text.strip()
                             
-                            # 1. Enviar a la vista del estudiante (cuadro verde)
-                            await websocket.send_text(f"✅ TRADUCCIÓN FINAL: {frase_final}")
+                            await websocket.send_text(f"TRADUCCIÓN FINAL: {frase_final}")
                             
-                            # 2. EMITIR AL COORDINADOR COMO MENSAJE DE CHAT
                             mensaje_chat = {
                                 "tipo": "estudiante",
                                 "contenido": frase_final
@@ -527,14 +504,12 @@ async def websocket_video_endpoint(websocket: WebSocket):
                             await manager.broadcast(mensaje_chat)
                             
                         except Exception as e:
-                            await websocket.send_text(f"❌ Error en la traducción LLM.")
+                            await websocket.send_text(f"Error en la traducción LLM.")
                             print(f"Error Gemini: {e}")
                             
-                        # Limpiar buffer para la siguiente oración
                         palabras_buffer = []
                         procesando_llm = False
                 
-                # 2. Decodificar a OpenCV (solo si no estamos pausados esperando al LLM)
                 if not procesando_llm:
                     encoded_data = data.split(',')[1]
                     nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
@@ -546,30 +521,25 @@ async def websocket_video_endpoint(websocket: WebSocket):
                     keypoints = extract_keypoints(results)
                     keypoints = normalize_features(keypoints)
                     
-                    # 3. Lógica de Predicción LSTM
                     if np.any(keypoints[-126:] != 0):
                         sequence.append(keypoints)
                         sequence = sequence[-30:] 
                         frame_counter += 1
-                        ultima_vez_visto = time.time() # Reiniciar el cronómetro porque vimos manos
+                        ultima_vez_visto = time.time() 
                         
                         if len(sequence) == 30 and frame_counter % 3 == 0:
                             res = model.predict(np.expand_dims(sequence, axis=0), verbose=0)[0]
                             prediction_idx = np.argmax(res)
                             confidence = res[prediction_idx]
-                            
                             if confidence > threshold:
                                 current_prediction = letters[prediction_idx]
                                 consecutive_predictions.append(current_prediction)
                                 consecutive_predictions = consecutive_predictions[-required_consecutive:]
-                                
                                 if len(consecutive_predictions) == required_consecutive and all(p == current_prediction for p in consecutive_predictions):
-                                    # Si la seña es estable y diferente de Z_NADA
                                     if current_prediction != "Z_NADA":
-                                        # Agregamos al buffer solo si es una palabra nueva (evita "HOLA HOLA HOLA")
                                         if len(palabras_buffer) == 0 or palabras_buffer[-1] != current_prediction:
                                             palabras_buffer.append(current_prediction)
-                                            await websocket.send_text(f"👁️ Detectado: {' '.join(palabras_buffer)}")
+                                            await websocket.send_text(f"Detectado: {' '.join(palabras_buffer)}")
                             else:
                                 consecutive_predictions = []
                     else:
@@ -604,7 +574,6 @@ async def accesibilidad_css():
     with open("../frontend/css/accesibilidad.css", encoding="utf-8") as f:
         return Response(content=f.read(), media_type="text/css")
 
-# ── API: Login ─────────────────────────────────────────────────
 @app.post("/api/login")
 async def login(email: str = Form(...), password: str = Form(...)):
     db = SessionLocal()
@@ -630,7 +599,6 @@ async def login(email: str = Form(...), password: str = Form(...)):
     finally:
         db.close()
 
-# Registro público: solo estudiante (coordinador lo asigna el admin)
 ROLES_ASIGNABLES = ("estudiante", "coordinador", "admin")
 
 @app.post("/api/registro")
@@ -688,7 +656,6 @@ async def registro(
     finally:
         db.close()
 
-# ── API: Administración de usuarios ───────────────────────────
 def _mapa_usuarios(db: Session) -> dict:
     return {u.id: u for u in db.query(models.Usuario).all()}
 
@@ -1011,7 +978,6 @@ async def eliminar_usuario(
     finally:
         db.close()
 
-# ── API: Administración de salas ──────────────────────────────
 @app.get("/api/admin/sesiones")
 async def listar_sesiones(
     estado: Optional[str] = Query(None),
@@ -1177,7 +1143,6 @@ async def admin_eliminar_sesiones_masivo(
     finally:
         db.close()
 
-# ── API: Auditoría ─────────────────────────────────────────────
 @app.get("/api/admin/auditoria")
 async def listar_auditoria(
     accion: Optional[str] = Query(None),
@@ -1195,7 +1160,6 @@ async def listar_auditoria(
     finally:
         db.close()
 
-# ── API: Frases rápidas (público autenticado) ─────────────────
 def _serializar_frase(f: models.FraseRapida) -> dict:
     return {
         "id": f.id,
@@ -1220,7 +1184,6 @@ async def listar_frases_publicas(
     finally:
         db.close()
 
-# ── API: Admin frases rápidas ──────────────────────────────────
 @app.get("/api/admin/frases")
 async def admin_listar_frases(
     dirigida_a: Optional[str] = Query(None),
@@ -1344,7 +1307,6 @@ async def admin_eliminar_frase(
 async def me(usuario: dict = Depends(requiere_auth)):
     return {"id": usuario["id"], "nombre": usuario["nombre"], "rol": usuario["rol"]}
 
-# ── API: Crear sala ────────────────────────────────────────────
 @app.post("/api/crear-sala")
 async def crear_sala(usuario: dict = Depends(requiere_rol("coordinador"))):
     db = SessionLocal()
@@ -1467,7 +1429,6 @@ async def cerrar_sala_coordinador(
     finally:
         db.close()
 
-# ── API: Validar código ────────────────────────────────────────
 @app.get("/api/validar-codigo/{codigo}")
 async def validar_codigo(codigo: str, usuario: dict = Depends(requiere_rol("estudiante"))):
     db = SessionLocal()
@@ -1490,7 +1451,6 @@ async def validar_codigo(codigo: str, usuario: dict = Depends(requiere_rol("estu
     finally:
         db.close()
 
-# ── API: Historial ─────────────────────────────────────────────
 def _historial_sesion(db: Session, s: models.Sesion) -> dict | None:
     transcripciones = (
         db.query(models.Transcripcion)
@@ -1565,7 +1525,6 @@ async def get_historial(
     finally:
         db.close()
 
-# ── API: Voz (Whisper local / Google) ──────────────────────────
 @app.get("/api/voz/estado")
 async def voz_estado(usuario: dict = Depends(requiere_auth)):
     try:
@@ -1610,7 +1569,6 @@ async def transcribir_audio(
             content={"error": str(exc), "texto": "", "motor": None, "modo": "sin_servicio"},
         )
 
-# ── WebSocket Coordinador ──────────────────────────────────────
 @app.websocket("/ws/coordinador")
 async def ws_coordinador(
     websocket: WebSocket,
@@ -1669,7 +1627,6 @@ async def ws_coordinador(
         sala.desvincular_coordinador(websocket)
         db.close()
 
-# ── WebSocket Estudiante ───────────────────────────────────────
 @app.websocket("/ws/estudiante/{codigo}")
 async def ws_estudiante(websocket: WebSocket, codigo: str, token: str = Query(...)):
     usuario = usuario_desde_token(token)
