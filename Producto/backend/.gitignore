@@ -1,24 +1,10 @@
-# Entornos virtuales
 venv/
-.venv/
-.venv-freeze/
-
-# Python
 __pycache__/
-*.py[cod]
+*.pyc
+cat > Producto/backend/.gitignore << 'EOF'
+venv/
+__pycache__/
+*.pyc
+
 *.pyo
-*.egg-info/
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Secretos (mantener .env.example en el repo)
 .env
-.env.*
-!.env.example
-
-# Modelos Whisper descargados (pesados, se regeneran con app.voz.transcripcion)
-models/whisper/
-
-# Logs locales
-*.log
