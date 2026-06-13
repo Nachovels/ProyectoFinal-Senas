@@ -55,6 +55,11 @@
         top: 0;
         z-index: 100;
       }
+      .topbar-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
       .topbar-title {
         font-size: 17px;
         font-weight: 600;
@@ -63,7 +68,6 @@
       .topbar-sub {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.5);
-        margin-top: 2px;
       }
       .session-pill {
         background: rgba(16, 185, 129, 0.15);
@@ -108,6 +112,113 @@
         }
       }
 
+      /* PANTALLA DE CREAR SALA */
+      .sala-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 60px);
+        padding: 24px;
+        gap: 24px;
+      }
+      .sala-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 32px 24px;
+        width: 100%;
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+      .sala-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+      .sala-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--navy);
+        margin-bottom: 8px;
+      }
+      .sala-desc {
+        font-size: 14px;
+        color: var(--gray-text);
+        line-height: 1.5;
+        margin-bottom: 24px;
+      }
+      .btn-crear {
+        width: 100%;
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+        transition: background 0.2s;
+      }
+      .btn-crear:hover {
+        background: var(--navy-mid);
+      }
+
+      .codigo-card {
+        background: var(--navy);
+        border-radius: var(--radius);
+        padding: 28px 24px;
+        width: 100%;
+        box-shadow: var(--shadow);
+        text-align: center;
+        display: none;
+      }
+      .codigo-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 12px;
+      }
+      .codigo-value {
+        font-size: 48px;
+        font-weight: 700;
+        color: white;
+        font-family: "DM Mono";
+        letter-spacing: 0.15em;
+        margin-bottom: 12px;
+      }
+      .codigo-hint {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 20px;
+      }
+      .btn-copiar {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: var(--radius-sm);
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+        transition: all 0.2s;
+      }
+      .btn-copiar:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .estudiantes-count {
+        margin-top: 16px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .estudiantes-count span {
+        color: var(--teal-light);
+        font-weight: 600;
+      }
+
+      /* CONTENT */
       .content {
         flex: 1;
         padding: 16px;
@@ -161,8 +272,8 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        min-height: 240px;
-        max-height: 340px;
+        min-height: 200px;
+        max-height: 300px;
         overflow-y: auto;
       }
       .msg {
@@ -231,6 +342,41 @@
         text-align: center;
         color: var(--gray-muted);
         font-size: 13px;
+      }
+
+      /* CODIGO MINI */
+      .codigo-mini {
+        background: var(--navy);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .codigo-mini-label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .codigo-mini-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: white;
+        font-family: "DM Mono";
+        letter-spacing: 0.1em;
+      }
+      .btn-copiar-mini {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+      }
+      .btn-copiar-mini:hover {
+        background: rgba(255, 255, 255, 0.2);
       }
 
       /* MIC */
@@ -369,6 +515,80 @@
         background: var(--danger);
         color: white;
       }
+
+      /* ESCRIBIR */
+      .escribir-area {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+      .escribir-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gray-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+      }
+      .compose-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+      .compose-input {
+        flex: 1;
+        border: 1.5px solid var(--gray-border);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+        font-size: 15px;
+        font-family: "DM Sans";
+        color: var(--text);
+        resize: none;
+        min-height: 42px;
+        max-height: 100px;
+        outline: none;
+        line-height: 1.4;
+        transition: border-color 0.2s;
+      }
+      .compose-input:focus {
+        border-color: var(--blue);
+      }
+      .btn-enviar {
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .btn-enviar:hover {
+        background: var(--navy-mid);
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--gray-muted);
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .divider::before,
+      .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--gray-border);
+      }
+
       .btn-terminar {
         background: #fee2e2;
         color: var(--danger);
@@ -380,7 +600,7 @@
         cursor: pointer;
         font-family: "DM Sans";
         width: 100%;
-        margin-top: 10px;
+        margin-top: 4px;
         transition: all 0.2s;
       }
       .btn-terminar:hover {
@@ -469,9 +689,6 @@
       }
 
       /* FRASES */
-      .frases-section {
-        margin-bottom: 16px;
-      }
       .frases-label {
         font-size: 11px;
         font-weight: 600;
@@ -636,195 +853,307 @@
         border-radius: 0 0 3px 3px;
       }
     </style>
+    <script src="/js/accesibilidad.js"></script>
   </head>
   <body>
     <div class="topbar">
-      <div>
+      <div class="topbar-left">
         <div class="topbar-title">SpeakingHands</div>
-        <div class="topbar-sub">Vista del coordinador</div>
+        <div class="topbar-sub" id="topbar-sub">Vista del coordinador</div>
       </div>
       <div
         class="session-pill"
         onclick="terminarSesion()"
-        title="Clic para terminar sesión"
+        id="session-pill"
+        style="display: none"
       >
         <div class="dot"></div>
         <span>Sesión activa</span>
       </div>
     </div>
 
-    <div class="content">
-      <!-- CONVERSACIÓN -->
-      <div class="tab-content active" id="tab-chat">
-        <div class="chat-area">
-          <div class="chat-header">
-            <div class="dot"></div>
-            <div class="chat-title">Sesión con estudiante</div>
-            <div class="chat-sub" id="chat-sub">voz a texto activo</div>
-          </div>
-          <div class="chat-messages" id="chat-messages">
-            <div class="chat-empty">La conversación aparecerá aquí</div>
-          </div>
+    <!-- PANTALLA INICIAL -->
+    <div class="sala-screen" id="sala-screen">
+      <div class="sala-card">
+        <div class="sala-icon">🎙️</div>
+        <div class="sala-title">Crear nueva reunión</div>
+        <div class="sala-desc">
+          Se generará un código de 6 caracteres que debes compartir con el
+          estudiante para que pueda unirse.
         </div>
-        <div class="mic-area">
-          <div class="mic-row" id="mic-row">
-            <div class="mic-circle" id="mic-circle">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
-              </svg>
+        <button class="btn-crear" id="btn-crear" onclick="crearSala()">
+          + Crear reunión
+        </button>
+      </div>
+      <div class="codigo-card" id="codigo-card">
+        <div class="codigo-label">Código de sala</div>
+        <div class="codigo-value" id="codigo-display">——</div>
+        <div class="codigo-hint">Comparte este código con el estudiante</div>
+        <button class="btn-copiar" onclick="copiarCodigo()">
+          📋 Copiar código
+        </button>
+        <div class="estudiantes-count">
+          Estudiantes conectados: <span id="est-count">0</span>
+        </div>
+      </div>
+      <button
+        class="btn-crear"
+        id="btn-entrar"
+        style="display: none; width: 100%"
+        onclick="entrarASala()"
+      >
+        Entrar a la sala →
+      </button>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div style="display: none" id="main-content">
+      <div class="content">
+        <!-- CONVERSACIÓN -->
+        <div class="tab-content active" id="tab-chat">
+          <div class="codigo-mini">
+            <div>
+              <div class="codigo-mini-label">Código de sala</div>
+              <div class="codigo-mini-value" id="codigo-mini-val">——</div>
             </div>
-            <div class="mic-status" id="mic-status">Listo para escuchar</div>
-            <div class="mic-waves" id="mic-waves" style="display: none">
-              <div class="wave"></div>
-              <div class="wave"></div>
-              <div class="wave"></div>
-              <div class="wave"></div>
-              <div class="wave"></div>
-            </div>
-          </div>
-          <div class="mic-preview empty" id="mic-preview">
-            Aquí aparecerá lo que dices...
-          </div>
-          <div class="btn-row">
-            <button class="btn-hablar" onclick="iniciar()">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="23" />
-                <line x1="8" y1="23" x2="16" y2="23" />
-              </svg>
-              Hablar
+            <button class="btn-copiar-mini" onclick="copiarCodigo()">
+              📋 Copiar
             </button>
-            <button class="btn-detener" onclick="detener()">⏹ Detener</button>
           </div>
-          <button class="btn-terminar" onclick="terminarSesion()">
-            🔴 Terminar sesión
-          </button>
-        </div>
-      </div>
 
-      <!-- CÁMARA -->
-      <div class="tab-content" id="tab-camara">
-        <div class="cam-card">
-          <div class="cam-frame">
-            <div class="cam-corner tl"></div>
-            <div class="cam-corner tr"></div>
-            <div class="cam-corner bl"></div>
-            <div class="cam-corner br"></div>
-            <div class="cam-placeholder">
-              <div class="cam-icon">📷</div>
-              <div class="cam-text">Módulo IA — en desarrollo</div>
+          <div class="chat-area">
+            <div class="chat-header">
+              <div class="dot"></div>
+              <div class="chat-title">Sesión con estudiante</div>
+              <div class="chat-sub" id="chat-sub">activo</div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+              <div class="chat-empty">La conversación aparecerá aquí</div>
             </div>
           </div>
-          <div class="cam-bottom">
-            <div class="cam-label">Vista coordinador con cámara</div>
-            <button class="cam-btn">Próximamente</button>
-          </div>
-        </div>
-        <div
-          style="
-            background: white;
-            border-radius: var(--radius);
-            padding: 16px;
-            box-shadow: var(--shadow);
-          "
-        >
-          <div
-            style="font-size: 13px; color: var(--gray-text); line-height: 1.6"
-          >
-            La cámara del coordinador permitirá que el estudiante sordo vea al
-            coordinador hablando, complementando los subtítulos en pantalla para
-            una comunicación más natural.
-          </div>
-        </div>
-      </div>
 
-      <!-- FRASES -->
-      <div class="tab-content" id="tab-frases">
-        <div
-          style="
-            background: white;
-            border-radius: var(--radius);
-            padding: 16px;
-            box-shadow: var(--shadow);
-          "
-        >
-          <div class="frases-section">
+          <!-- ESCRIBIR -->
+          <div class="escribir-area">
+            <div class="escribir-label">Escribe al estudiante</div>
+            <div class="compose-row">
+              <textarea
+                class="compose-input"
+                id="texto-coord"
+                rows="2"
+                placeholder="Escribe tu mensaje..."
+              ></textarea>
+              <button class="btn-enviar" onclick="enviarTexto()">Enviar</button>
+            </div>
+          </div>
+
+          <div class="divider">o usa tu voz</div>
+
+          <!-- MICRÓFONO -->
+          <div class="mic-area">
+            <div class="mic-row" id="mic-row">
+              <div class="mic-circle" id="mic-circle">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                  />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+              </div>
+              <div class="mic-status" id="mic-status">Listo para escuchar</div>
+              <div class="mic-waves" id="mic-waves" style="display: none">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+              </div>
+            </div>
+            <div class="mic-preview empty" id="mic-preview">
+              Aquí aparecerá lo que dices...
+            </div>
+            <div class="btn-row">
+              <button class="btn-hablar" onclick="iniciar()">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                  />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+                Hablar
+              </button>
+              <button class="btn-detener" onclick="detener()">⏹ Detener</button>
+            </div>
+            <button class="btn-terminar" onclick="terminarSesion()">
+              🔴 Terminar sesión
+            </button>
+          </div>
+        </div>
+
+        <!-- CÁMARA -->
+        <div class="tab-content" id="tab-camara">
+          <div class="cam-card">
+            <div class="cam-frame">
+              <div class="cam-corner tl"></div>
+              <div class="cam-corner tr"></div>
+              <div class="cam-corner bl"></div>
+              <div class="cam-corner br"></div>
+              <div class="cam-placeholder">
+                <div class="cam-icon">📷</div>
+                <div class="cam-text">Módulo IA — en desarrollo</div>
+              </div>
+            </div>
+            <div class="cam-bottom">
+              <div class="cam-label">Vista coordinador con cámara</div>
+              <button class="cam-btn">Próximamente</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FRASES -->
+        <div class="tab-content" id="tab-frases">
+          <div
+            style="
+              background: white;
+              border-radius: var(--radius);
+              padding: 16px;
+              box-shadow: var(--shadow);
+            "
+          >
             <div class="frases-label">Enviar al estudiante</div>
             <div class="frases-grid" id="frases-coord"></div>
           </div>
         </div>
-      </div>
 
-      <!-- HISTORIAL -->
-      <div class="tab-content" id="tab-historial">
-        <div id="historial-container">
-          <div class="loading">Cargando historial...</div>
+        <!-- HISTORIAL -->
+        <div class="tab-content" id="tab-historial">
+          <div id="historial-container">
+            <div class="loading">Cargando...</div>
+          </div>
         </div>
       </div>
+
+      <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('chat', this)">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+          </svg>
+          Conversación
+        </button>
+        <button class="nav-btn" onclick="switchTab('camara', this)">
+          <svg viewBox="0 0 24 24">
+            <path d="M23 7l-7 5 7 5V7z" />
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+          </svg>
+          Cámara
+        </button>
+        <button class="nav-btn" onclick="switchTab('frases', this)">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+            <line x1="9" y1="10" x2="15" y2="10" />
+            <line x1="9" y1="14" x2="13" y2="14" />
+          </svg>
+          Frases
+        </button>
+        <button
+          class="nav-btn"
+          onclick="
+            switchTab('historial', this);
+            cargarHistorial();
+          "
+        >
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          Historial
+        </button>
+      </nav>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="nav-btn active" onclick="switchTab('chat', this)">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-          />
-        </svg>
-        Conversación
-      </button>
-      <button class="nav-btn" onclick="switchTab('camara', this)">
-        <svg viewBox="0 0 24 24">
-          <path d="M23 7l-7 5 7 5V7z" />
-          <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-        </svg>
-        Cámara
-      </button>
-      <button class="nav-btn" onclick="switchTab('frases', this)">
-        <svg viewBox="0 0 24 24">
-          <path
-            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-          />
-          <line x1="9" y1="10" x2="15" y2="10" />
-          <line x1="9" y1="14" x2="13" y2="14" />
-        </svg>
-        Frases
-      </button>
-      <button
-        class="nav-btn"
-        onclick="
-          switchTab('historial', this);
-          cargarHistorial();
-        "
-      >
-        <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-        Historial
-      </button>
-    </nav>
-
     <script>
-      const socket = new WebSocket("ws://localhost:8000/ws/coordinador");
+      Accesibilidad.init();
+      let socket = null;
       let reconocedor;
+      let codigoActual = null;
 
-      socket.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        agregarMsg(
-          msg.contenido,
-          msg.tipo === "frase_rapida" ? "frase" : "estudiante",
-          msg.tipo === "frase_rapida" ? "Frase rápida" : "Estudiante",
-        );
-      };
+      // ── Crear sala ─────────────────────────────────────────────
+      async function crearSala() {
+        const btn = document.getElementById("btn-crear");
+        btn.disabled = true;
+        btn.textContent = "Creando...";
+        try {
+          const res = await fetch("/api/crear-sala", { method: "POST" });
+          const data = await res.json();
+          codigoActual = data.codigo;
+          document.getElementById("codigo-display").textContent = codigoActual;
+          document.getElementById("codigo-card").style.display = "block";
+          document.getElementById("btn-entrar").style.display = "block";
+          btn.style.display = "none";
+          conectarWebSocket();
+        } catch (e) {
+          btn.disabled = false;
+          btn.textContent = "+ Crear reunión";
+          alert("Error al crear la sala.");
+        }
+      }
 
+      function conectarWebSocket() {
+        socket = new WebSocket("ws://localhost:8000/ws/coordinador");
+        socket.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.tipo === "codigo_sala") return;
+          if (msg.tipo === "estudiante_conectado") {
+            agregarMsg(msg.contenido);
+            Accesibilidad.pulsoMensajeNuevo();
+            const count =
+              parseInt(document.getElementById("est-count").textContent) + 1;
+            document.getElementById("est-count").textContent = count;
+            return;
+          }
+          agregarMsg(
+            msg.contenido,
+            msg.tipo === "frase_rapida" ? "frase" : "estudiante",
+            msg.tipo === "frase_rapida" ? "Frase rápida" : "Estudiante",
+          );
+        };
+        socket.onclose = () => {
+          document.getElementById("chat-sub").textContent = "desconectado";
+        };
+      }
+
+      function entrarASala() {
+        document.getElementById("sala-screen").style.display = "none";
+        document.getElementById("main-content").style.display = "block";
+        document.getElementById("session-pill").style.display = "flex";
+        document.getElementById("codigo-mini-val").textContent = codigoActual;
+        document.getElementById("topbar-sub").textContent =
+          "Sala: " + codigoActual;
+      }
+
+      function copiarCodigo() {
+        navigator.clipboard.writeText(codigoActual);
+        const btns = document.querySelectorAll(".btn-copiar, .btn-copiar-mini");
+        btns.forEach((b) => {
+          b.textContent = "✅ Copiado";
+          setTimeout(
+            () =>
+              (b.textContent = b.classList.contains("btn-copiar-mini")
+                ? "📋 Copiar"
+                : "📋 Copiar código"),
+            2000,
+          );
+        });
+      }
+
+      // ── Chat ───────────────────────────────────────────────────
       function agregarMsg(contenido, tipo, label) {
         const c = document.getElementById("chat-messages");
         const empty = c.querySelector(".chat-empty");
@@ -852,10 +1181,36 @@
         btn.classList.add("active");
       }
 
+      // ── Escribir ───────────────────────────────────────────────
+      function enviarTexto() {
+        const txt = document.getElementById("texto-coord").value.trim();
+        if (!txt) return;
+        if (!socket || socket.readyState !== 1) {
+          alert("No hay conexión con la sala.");
+          return;
+        }
+        socket.send(JSON.stringify({ tipo: "texto", contenido: txt }));
+        agregarMsg(txt, "coord", "Tú (texto)");
+        Accesibilidad.confirmarEnvio("✅ Mensaje enviado"); // ← aquí
+        document.getElementById("texto-coord").value = "";
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("texto-coord")
+          .addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              enviarTexto();
+            }
+          });
+      });
+
+      // ── Mic ────────────────────────────────────────────────────
       function iniciar() {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) {
-          alert("Usa Chrome.");
+          alert("Usa Chrome para el reconocimiento de voz.");
           return;
         }
         reconocedor = new SR();
@@ -878,34 +1233,23 @@
           document.getElementById("mic-waves").style.display = "none";
         };
         reconocedor.onresult = (event) => {
-          let interimTranscript = "";
-          let finalTranscript = "";
-
+          let interim = "";
+          let final = "";
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const t = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-              finalTranscript += t;
-            } else {
-              interimTranscript += t;
-            }
+            if (event.results[i].isFinal) final += t;
+            else interim += t;
           }
-
           const preview = document.getElementById("mic-preview");
-
-          // Mostrar texto interim en el preview (aún no enviado)
-          if (interimTranscript) {
-            preview.textContent = interimTranscript;
+          if (interim) {
+            preview.textContent = interim;
             preview.classList.remove("empty");
           }
-
-          // Solo enviar por WebSocket y agregar al chat cuando el resultado es definitivo
-          if (finalTranscript.trim()) {
-            if (socket.readyState === 1) {
-              socket.send(
-                JSON.stringify({ tipo: "voz", contenido: finalTranscript }),
-              );
-            }
-            agregarMsg(finalTranscript, "coord", "Tú (voz → texto)");
+          if (final.trim()) {
+            if (socket && socket.readyState === 1)
+              socket.send(JSON.stringify({ tipo: "voz", contenido: final }));
+            agregarMsg(final, "coord", "Tú (voz → texto)");
+            Accesibilidad.confirmarEnvio("✅ Mensaje enviado");
             preview.textContent = "Aquí aparecerá lo que dices...";
             preview.classList.add("empty");
           }
@@ -920,7 +1264,7 @@
       function terminarSesion() {
         if (!confirm("¿Terminar la sesión actual?")) return;
         if (reconocedor) reconocedor.stop();
-        socket.close();
+        if (socket) socket.close();
         document.querySelector(".session-pill .dot").style.background =
           "#EF4444";
         document.querySelector(".session-pill span").textContent =
@@ -929,7 +1273,7 @@
         alert("Sesión terminada. El historial fue guardado.");
       }
 
-      // Frases del coordinador hacia el estudiante
+      // ── Frases ─────────────────────────────────────────────────
       const frasesCoord = [
         "¿Me entiendes?",
         "Espera un momento",
@@ -944,13 +1288,15 @@
         btn.className = "frase-btn";
         btn.textContent = f;
         btn.onclick = () => {
-          if (socket.readyState === 1)
+          if (socket && socket.readyState === 1)
             socket.send(JSON.stringify({ tipo: "frase_rapida", contenido: f }));
           agregarMsg(f, "coord", "Tú (frase rápida)");
+          Accesibilidad.confirmarEnvio("✅ Frase enviada");
         };
         grid.appendChild(btn);
       });
 
+      // ── Historial ──────────────────────────────────────────────
       async function cargarHistorial() {
         const c = document.getElementById("historial-container");
         c.innerHTML = '<div class="loading">Cargando...</div>';
@@ -959,7 +1305,7 @@
           const sesiones = await res.json();
           if (!sesiones.length) {
             c.innerHTML =
-              '<div class="historial-empty"><div class="icon">📋</div><div>No hay sesiones registradas</div></div>';
+              '<div class="historial-empty"><div class="icon">📋</div><div>No hay sesiones</div></div>';
             return;
           }
           c.innerHTML = "";
