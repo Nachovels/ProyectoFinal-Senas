@@ -30,13 +30,17 @@ def verificar_token(token: str):
         return payload
     except JWTError:
         return None
-
-def extraer_bearer(authorization: str | None) -> str | None:
-    if authorization and authorization.startswith("Bearer "):
-        return authorization[7:]
+def extraer_bearer(authorization: str) -> str | None:
+    """Extrae el token de un header Authorization: Bearer <token>"""
+    if not authorization:
+        return None
+    parts = authorization.split()
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1]
     return None
 
 def usuario_desde_token(token: str) -> dict | None:
+    """Devuelve el payload del token o None si es inválido"""
     if not token:
         return None
-    return verificar_token(token)
+    return verificar_token(token)    
