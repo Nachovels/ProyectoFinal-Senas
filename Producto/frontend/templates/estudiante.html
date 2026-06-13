@@ -1,333 +1,1039 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpeakingHands — Estudiante</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --navy: #0F2744; --navy-mid: #1A3A5C;
-      --blue: #2563EB; --teal: #0D9488; --teal-light: #14B8A6;
-      --teal-bg: #F0FDF9; --teal-border: #99F6E4;
-      --gray-bg: #F8FAFC; --gray-border: #E2E8F0;
-      --gray-muted: #94A3B8; --gray-text: #64748B;
-      --text: #0F172A; --success: #10B981; --danger: #EF4444;
-      --radius: 14px; --radius-sm: 8px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
-      --tab-height: 72px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--gray-bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpeakingHands — Estudiante</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --navy: #0f2744;
+        --navy-mid: #1a3a5c;
+        --blue: #2563eb;
+        --teal: #0d9488;
+        --teal-light: #14b8a6;
+        --teal-bg: #f0fdf9;
+        --teal-border: #99f6e4;
+        --gray-bg: #f8fafc;
+        --gray-border: #e2e8f0;
+        --gray-muted: #94a3b8;
+        --gray-text: #64748b;
+        --text: #0f172a;
+        --success: #10b981;
+        --danger: #ef4444;
+        --radius: 14px;
+        --radius-sm: 8px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06);
+        --tab-height: 68px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--gray-bg);
+        color: var(--text);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        max-width: 480px;
+        margin: 0 auto;
+        overflow: hidden;
+      }
 
-    .topbar { background: var(--navy); padding: 16px 20px 14px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-    .topbar-title { font-size: 17px; font-weight: 600; color: white; }
-    .topbar-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-    .status-pill { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px; }
-    .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
-    .status-pill span { font-size: 12px; color: var(--success); font-weight: 500; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+      /* TOPBAR */
+      .topbar {
+        background: var(--navy);
+        padding: 14px 20px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .topbar-title {
+        font-size: 17px;
+        font-weight: 600;
+        color: white;
+      }
+      .topbar-sub {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 2px;
+      }
+      .status-pill {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 5px 10px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status-pill .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--success);
+        animation: pulse 2s infinite;
+      }
+      .status-pill span {
+        font-size: 12px;
+        color: var(--success);
+        font-weight: 500;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
 
-    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(var(--tab-height) + 16px); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+      /* PANTALLA UNIRSE */
+      .unirse-screen {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        overflow-y: auto;
+      }
+      .unirse-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 32px 24px;
+        width: 100%;
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+      .unirse-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+      .unirse-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--navy);
+        margin-bottom: 8px;
+      }
+      .unirse-desc {
+        font-size: 14px;
+        color: var(--gray-text);
+        line-height: 1.5;
+        margin-bottom: 24px;
+      }
+      .codigo-input {
+        width: 100%;
+        border: 2px solid var(--gray-border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        font-size: 28px;
+        font-weight: 700;
+        font-family: "DM Mono";
+        color: var(--navy);
+        text-align: center;
+        letter-spacing: 0.2em;
+        outline: none;
+        text-transform: uppercase;
+        transition: border-color 0.2s;
+        margin-bottom: 12px;
+      }
+      .codigo-input:focus {
+        border-color: var(--blue);
+      }
+      .btn-unirse {
+        width: 100%;
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+        transition: background 0.2s;
+      }
+      .btn-unirse:hover {
+        background: var(--navy-mid);
+      }
+      .btn-unirse:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .error-msg {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--danger);
+        margin-top: 12px;
+        display: none;
+      }
 
-    .cam-card { background: var(--navy); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
-    .cam-frame { aspect-ratio: 4/3; background: #070F1E; display: flex; align-items: center; justify-content: center; position: relative; }
-    .cam-corner { position: absolute; width: 20px; height: 20px; border-color: var(--teal-light); border-style: solid; opacity: 0.6; }
-    .cam-corner.tl { top:12px; left:12px; border-width:2px 0 0 2px; }
-    .cam-corner.tr { top:12px; right:12px; border-width:2px 2px 0 0; }
-    .cam-corner.bl { bottom:12px; left:12px; border-width:0 0 2px 2px; }
-    .cam-corner.br { bottom:12px; right:12px; border-width:0 2px 2px 0; }
-    .cam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .cam-icon { font-size: 40px; opacity: 0.25; }
-    .cam-text { font-size: 12px; color: rgba(255,255,255,0.3); font-family: 'DM Mono'; }
-    .cam-bottom { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .cam-label { font-size: 12px; color: rgba(255,255,255,0.45); font-family: 'DM Mono'; }
-    .cam-btn { background: var(--teal); color: white; border: none; border-radius: 20px; padding: 7px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; }
-    .detected-card { background: var(--teal-bg); border: 1px solid var(--teal-border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
-    .detected-label { font-size: 10px; color: var(--teal); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-    .detected-text { font-size: 18px; color: #064E3B; font-weight: 500; }
+      /* LAYOUT PRINCIPAL */
+      #main-content {
+        flex: 1;
+        display: none;
+        flex-direction: column;
+        min-height: 0;
+      }
+      #main-content.visible {
+        display: flex;
+      }
 
-    .chat-box { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 12px; }
-    .chat-box-header { background: var(--navy); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
-    .chat-box-header .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
-    .chat-box-title { font-size: 13px; font-weight: 500; color: white; }
-    .chat-box-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-left: auto; }
-    .chat-messages { padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 120px; max-height: 260px; overflow-y: auto; }
-    .msg { max-width: 82%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.45; animation: fadeIn 0.2s ease; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-    .msg-label { font-size: 10px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
-    .msg.coord { background: var(--navy); align-self: flex-end; border-bottom-right-radius: 4px; }
-    .msg.coord .msg-label { color: rgba(255,255,255,0.5); }
-    .msg.coord .msg-text { color: white; }
-    .msg.estudiante { background: var(--teal-bg); border: 1px solid var(--teal-border); align-self: flex-start; border-bottom-left-radius: 4px; }
-    .msg.estudiante .msg-label { color: var(--teal); }
-    .msg.estudiante .msg-text { color: #064E3B; }
-    .msg.frase { background: #F1F5F9; border: 1px solid var(--gray-border); align-self: flex-start; border-bottom-left-radius: 4px; }
-    .msg.frase .msg-label { color: var(--gray-text); }
-    .msg.frase .msg-text { color: var(--text); }
-    .chat-empty-msg { text-align: center; padding: 30px 20px; color: var(--gray-muted); font-size: 13px; }
+      /* CHAT PRINCIPAL — ocupa todo el espacio disponible */
+      .chat-principal {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: white;
+      }
+      .chat-header {
+        background: var(--navy);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .chat-header .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+      }
+      .chat-header-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: white;
+        flex: 1;
+      }
+      .chat-header-sub {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+        font-family: "DM Mono";
+      }
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        scroll-behavior: smooth;
+      }
+      .chat-empty-msg {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--gray-muted);
+        font-size: 13px;
+      }
 
-    .frases-section { margin-bottom: 20px; }
-    .frases-section-label { font-size: 11px; font-weight: 600; color: var(--gray-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
-    .frases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .frase-btn { background: white; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 13px 12px; font-size: 13px; color: var(--navy); cursor: pointer; text-align: center; transition: all 0.15s; line-height: 1.35; font-family: 'DM Sans'; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-    .frase-btn:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-1px); }
-    .frase-btn.hablando { background: var(--teal-bg); border-color: var(--teal); color: #065F46; }
+      /* BURBUJAS */
+      .msg {
+        max-width: 82%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 14px;
+        line-height: 1.45;
+        animation: fadeIn 0.2s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .msg-label {
+        font-size: 10px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.7;
+      }
+      .msg.coord {
+        background: var(--navy);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+      }
+      .msg.coord .msg-label {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .msg.coord .msg-text {
+        color: white;
+      }
+      .msg.yo {
+        background: var(--teal-bg);
+        border: 1px solid var(--teal-border);
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+      .msg.yo .msg-label {
+        color: var(--teal);
+      }
+      .msg.yo .msg-text {
+        color: #064e3b;
+      }
+      .msg.frase {
+        background: #f1f5f9;
+        border: 1px solid var(--gray-border);
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+      }
+      .msg.frase .msg-label {
+        color: var(--gray-text);
+      }
+      .msg.frase .msg-text {
+        color: var(--text);
+      }
 
-    .escribir-card { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
-    .escribir-label { font-size: 11px; color: var(--gray-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    textarea { width: 100%; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; font-family: 'DM Sans'; color: var(--text); resize: none; min-height: 100px; outline: none; transition: border-color 0.2s; }
-    textarea:focus { border-color: var(--blue); }
-    .btn-row { display: flex; gap: 8px; margin-top: 10px; }
-    .btn-primary { flex: 1; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; }
-    .btn-secondary { background: var(--teal-bg); color: var(--teal); border: 1.5px solid var(--teal-border); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; }
+      /* PANEL INFERIOR — tabs */
+      .panel-inferior {
+        flex-shrink: 0;
+        background: white;
+        border-top: 1px solid var(--gray-border);
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+      }
+      .tab-nav {
+        display: flex;
+        height: var(--tab-height);
+      }
+      .tab-nav-btn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: "DM Sans";
+        color: var(--gray-muted);
+        font-size: 10px;
+        font-weight: 500;
+        transition: color 0.15s;
+        padding: 8px 4px;
+        position: relative;
+      }
+      .tab-nav-btn svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+      }
+      .tab-nav-btn.active {
+        color: var(--navy);
+      }
+      .tab-nav-btn.active::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 28px;
+        height: 2.5px;
+        background: var(--navy);
+        border-radius: 0 0 3px 3px;
+      }
 
-    .historial-sesion { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
-    .historial-header { background: var(--gray-bg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-border); }
-    .historial-fecha { font-size: 13px; font-weight: 600; color: var(--navy); }
-    .historial-duracion { font-size: 12px; color: var(--gray-muted); font-family: 'DM Mono'; }
-    .historial-body { padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-    .historial-msg { font-size: 13px; padding: 7px 11px; border-radius: 8px; }
-    .historial-msg.voz { background: var(--navy); color: white; align-self: flex-end; max-width: 85%; margin-left: auto; }
-    .historial-msg.texto { background: var(--teal-bg); color: #064E3B; border: 1px solid var(--teal-border); max-width: 85%; }
-    .historial-msg.frase_rapida { background: #F1F5F9; color: var(--text); border: 1px solid var(--gray-border); max-width: 85%; }
-    .historial-hora { font-size: 10px; opacity: 0.55; margin-bottom: 2px; }
-    .historial-empty { text-align: center; padding: 60px 20px; color: var(--gray-muted); }
-    .historial-empty .icon { font-size: 36px; opacity: 0.3; margin-bottom: 10px; }
-    .loading { text-align: center; padding: 40px; color: var(--gray-muted); font-size: 14px; }
+      /* PANEL DE COMPOSICIÓN */
+      .compose-panel {
+        display: none;
+        padding: 12px 16px 16px;
+        border-top: 1px solid var(--gray-border);
+        background: white;
+      }
+      .compose-panel.active {
+        display: block;
+      }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: var(--tab-height); background: white; border-top: 1px solid var(--gray-border); display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); z-index: 100; }
-    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: none; cursor: pointer; font-family: 'DM Sans'; color: var(--gray-muted); font-size: 10px; font-weight: 500; transition: color 0.15s; padding: 8px 4px; position: relative; }
-    .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-    .nav-btn.active { color: var(--navy); }
-    .nav-btn.active::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 32px; height: 2.5px; background: var(--navy); border-radius: 0 0 3px 3px; }
-  </style>
-</head>
-<body>
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">SpeakingHands</div>
-      <div class="topbar-sub">Vista del estudiante</div>
+      /* ESCRIBIR */
+      .compose-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+      }
+      .compose-input {
+        flex: 1;
+        border: 1.5px solid var(--gray-border);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+        font-size: 15px;
+        font-family: "DM Sans";
+        color: var(--text);
+        resize: none;
+        min-height: 42px;
+        max-height: 100px;
+        outline: none;
+        line-height: 1.4;
+        transition: border-color 0.2s;
+      }
+      .compose-input:focus {
+        border-color: var(--blue);
+      }
+      .btn-enviar {
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .btn-leer {
+        background: var(--teal-bg);
+        color: var(--teal);
+        border: 1.5px solid var(--teal-border);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      /* FRASES */
+      .frases-panel {
+        display: none;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 12px 16px;
+        border-top: 1px solid var(--gray-border);
+        background: white;
+      }
+      .frases-panel.active {
+        display: block;
+      }
+      .frases-section-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gray-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+        margin-top: 12px;
+      }
+      .frases-section-label:first-child {
+        margin-top: 0;
+      }
+      .frases-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+      .frase-btn {
+        background: var(--gray-bg);
+        border: 1.5px solid var(--gray-border);
+        border-radius: var(--radius-sm);
+        padding: 10px 8px;
+        font-size: 12px;
+        color: var(--navy);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.15s;
+        line-height: 1.3;
+        font-family: "DM Sans";
+      }
+      .frase-btn:hover {
+        border-color: var(--teal);
+        color: var(--teal);
+        background: var(--teal-bg);
+      }
+      .frase-btn.hablando {
+        background: var(--teal-bg);
+        border-color: var(--teal);
+        color: #065f46;
+      }
+
+      /* SEÑAS */
+      .senas-panel {
+        display: none;
+        border-top: 1px solid var(--gray-border);
+        background: var(--navy);
+      }
+      .senas-panel.active {
+        display: block;
+      }
+      .senas-frame {
+        aspect-ratio: 16/9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: #070f1e;
+      }
+      .cam-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+      .cam-icon {
+        font-size: 32px;
+        opacity: 0.25;
+      }
+      .cam-text {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.3);
+        font-family: "DM Mono";
+      }
+      .senas-bottom {
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .senas-label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.45);
+        font-family: "DM Mono";
+      }
+      .detected-text {
+        font-size: 13px;
+        color: var(--teal-light);
+        font-weight: 500;
+      }
+
+      /* HISTORIAL */
+      .historial-panel {
+        display: none;
+        max-height: 260px;
+        overflow-y: auto;
+        padding: 12px 16px;
+        border-top: 1px solid var(--gray-border);
+        background: var(--gray-bg);
+      }
+      .historial-panel.active {
+        display: block;
+      }
+      .historial-sesion {
+        background: white;
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow);
+        margin-bottom: 10px;
+        overflow: hidden;
+      }
+      .historial-header {
+        background: var(--gray-bg);
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--gray-border);
+      }
+      .historial-fecha {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--navy);
+      }
+      .historial-duracion {
+        font-size: 11px;
+        color: var(--gray-muted);
+        font-family: "DM Mono";
+      }
+      .historial-body {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .historial-msg {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 6px;
+      }
+      .historial-msg.voz {
+        background: var(--navy);
+        color: white;
+        margin-left: auto;
+        max-width: 85%;
+      }
+      .historial-msg.texto {
+        background: var(--teal-bg);
+        color: #064e3b;
+        border: 1px solid var(--teal-border);
+        max-width: 85%;
+      }
+      .historial-msg.frase_rapida {
+        background: #f1f5f9;
+        color: var(--text);
+        border: 1px solid var(--gray-border);
+        max-width: 85%;
+      }
+      .historial-hora {
+        font-size: 10px;
+        opacity: 0.5;
+        margin-bottom: 2px;
+      }
+      .historial-empty {
+        text-align: center;
+        padding: 24px;
+        color: var(--gray-muted);
+        font-size: 13px;
+      }
+      .loading {
+        text-align: center;
+        padding: 24px;
+        color: var(--gray-muted);
+        font-size: 13px;
+      }
+    </style>
+    <script src="/js/accesibilidad.js"></script>
+  </head>
+  <body>
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">SpeakingHands</div>
+        <div class="topbar-sub" id="topbar-sub">Vista del estudiante</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div class="status-pill" id="status-pill" style="display: none">
+          <div class="dot"></div>
+          <span id="statusText">Conectado</span>
+        </div>
+        <button
+          id="btn-salir"
+          onclick="salirDeSala()"
+          style="
+            display: none;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: &quot;DM Sans&quot;;
+            cursor: pointer;
+          "
+        >
+          Salir
+        </button>
+      </div>
     </div>
-    <div class="status-pill">
-      <div class="dot"></div>
-      <span id="statusText">Conectando...</span>
-    </div>
-  </div>
 
-  <div class="content">
-    <!-- SEÑAS -->
-    <div class="tab-content active" id="tab-senas">
-      <div class="cam-card">
-        <div class="cam-frame">
-          <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
-          <div class="cam-corner bl"></div><div class="cam-corner br"></div>
-          <div class="cam-placeholder">
-            <div class="cam-icon">✋</div>
-            <div class="cam-text">Módulo IA — en desarrollo</div>
+    <!-- PANTALLA UNIRSE -->
+    <div class="unirse-screen" id="unirse-screen">
+      <div class="unirse-card">
+        <div class="unirse-icon">✋</div>
+        <div class="unirse-title">Unirse a una reunión</div>
+        <div class="unirse-desc">
+          Ingresa el código de 6 caracteres que te compartió el coordinador.
+        </div>
+        <input
+          class="codigo-input"
+          type="text"
+          id="codigo-input"
+          maxlength="6"
+          placeholder="ABC123"
+          autocomplete="off"
+        />
+        <button class="btn-unirse" id="btn-unirse" onclick="unirseASala()">
+          Unirse →
+        </button>
+        <div class="error-msg" id="error-msg"></div>
+      </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="main-content">
+      <!-- Chat principal: ocupa todo el espacio disponible -->
+      <div class="chat-principal">
+        <div class="chat-header">
+          <div class="dot"></div>
+          <div class="chat-header-title" id="chat-title">Conversación</div>
+          <div class="chat-header-sub" id="chat-hora">—</div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-empty-msg">
+            Esperando mensajes del coordinador...
           </div>
         </div>
-        <div class="cam-bottom">
-          <div class="cam-label">Detección MediaPipe</div>
-          <button class="cam-btn">Próximamente</button>
-        </div>
       </div>
-      <div class="detected-card">
-        <div class="detected-label">Traducción IA</div>
-        <div class="detected-text" id="senaDetectada">Esperando señas...</div>
-      </div>
-      <div class="chat-box">
-        <div class="chat-box-header">
-          <div class="dot"></div>
-          <div class="chat-box-title">El coordinador dice:</div>
-          <div class="chat-box-sub" id="chat-hora">—</div>
+
+      <!-- Panel inferior con tabs -->
+      <div class="panel-inferior">
+        <!-- Panel escribir -->
+        <div class="compose-panel active" id="panel-escribir">
+          <div class="compose-row">
+            <textarea
+              class="compose-input"
+              id="mi-respuesta"
+              placeholder="Escribe tu mensaje..."
+              rows="1"
+            ></textarea>
+            <button class="btn-leer" onclick="leerEscrito()">🔊</button>
+            <button class="btn-enviar" onclick="enviarEscrito()">Enviar</button>
+          </div>
         </div>
-        <div class="chat-messages" id="chat-messages-senas">
-          <div class="chat-empty-msg">Esperando al coordinador...</div>
+
+        <!-- Panel frases -->
+        <div class="frases-panel" id="panel-frases">
+          <div class="frases-section-label">Tú → Coordinador</div>
+          <div class="frases-grid" id="frases-est"></div>
+          <div class="frases-section-label">Coordinador → Estudiante</div>
+          <div class="frases-grid" id="frases-coord"></div>
         </div>
+
+        <!-- Panel señas -->
+        <div class="senas-panel" id="panel-senas">
+          <div class="senas-frame">
+            <div class="cam-placeholder">
+              <div class="cam-icon">✋</div>
+              <div class="cam-text">Módulo IA — en desarrollo</div>
+            </div>
+          </div>
+          <div class="senas-bottom">
+            <div class="senas-label">Traducción IA</div>
+            <div class="detected-text" id="senaDetectada">
+              Esperando señas...
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel historial -->
+        <div class="historial-panel" id="panel-historial">
+          <div id="historial-container">
+            <div class="loading">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- Nav tabs -->
+        <nav class="tab-nav">
+          <button
+            class="tab-nav-btn active"
+            id="tab-escribir"
+            onclick="switchTab('escribir', this)"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
+              />
+            </svg>
+            Escribir
+          </button>
+          <button
+            class="tab-nav-btn"
+            id="tab-frases"
+            onclick="switchTab('frases', this)"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+              />
+            </svg>
+            Frases
+          </button>
+          <button
+            class="tab-nav-btn"
+            id="tab-senas"
+            onclick="switchTab('senas', this)"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"
+              />
+              <path
+                d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34L4 19c-.96-1-.96-2.62 0-3.58A3.15 3.15 0 0 1 6.41 14.5H10v-4"
+              />
+            </svg>
+            Señas
+          </button>
+          <button
+            class="tab-nav-btn"
+            id="tab-historial"
+            onclick="
+              switchTab('historial', this);
+              cargarHistorial();
+            "
+          >
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Historial
+          </button>
+        </nav>
       </div>
     </div>
 
-    <!-- FRASES -->
-    <div class="tab-content" id="tab-frases">
-      <div class="frases-section">
-        <div class="frases-section-label">
-          Estudiante → Coordinador
-          <span class="badge" style="background:#EFF6FF;color:#2563EB">toca para hablar</span>
-        </div>
-        <div class="frases-grid" id="frases-est"></div>
-      </div>
-      <div class="frases-section">
-        <div class="frases-section-label" style="color:#6366F1">
-          Coordinador → Estudiante
-          <span class="badge" style="background:#EEF2FF;color:#6366F1">mostrar pantalla</span>
-        </div>
-        <div class="frases-grid" id="frases-coord"></div>
-      </div>
-    </div>
+    <script>
+      Accesibilidad.init();
+      let socket = null;
+      let codigoSala = null;
 
-    <!-- ESCRIBIR -->
-    <div class="tab-content" id="tab-escribir">
-      <div class="chat-box" style="margin-bottom:12px">
-        <div class="chat-box-header">
-          <div class="dot"></div>
-          <div class="chat-box-title">Conversación</div>
-        </div>
-        <div class="chat-messages" id="chat-messages-escribir">
-          <div class="chat-empty-msg">La conversación aparecerá aquí</div>
-        </div>
-      </div>
-      <div class="escribir-card">
-        <div class="escribir-label">Tu respuesta</div>
-        <textarea id="mi-respuesta" placeholder="Escribe aquí tu mensaje..."></textarea>
-        <div class="btn-row">
-          <button class="btn-primary" onclick="enviarEscrito()">📤 Enviar</button>
-          <button class="btn-secondary" onclick="leerEscrito()">🔊 Leer</button>
-        </div>
-      </div>
-    </div>
+      document
+        .getElementById("codigo-input")
+        .addEventListener("input", function () {
+          this.value = this.value.toUpperCase();
+        });
 
-    <!-- HISTORIAL -->
-    <div class="tab-content" id="tab-historial">
-      <div id="historial-container">
-        <div class="loading">Cargando historial...</div>
-      </div>
-    </div>
-  </div>
+      document
+        .getElementById("mi-respuesta")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            enviarEscrito();
+            
+          }
+        });
 
-  <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('senas',this)">
-      <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34L4 19c-.96-1-.96-2.62 0-3.58A3.15 3.15 0 0 1 6.41 14.5H10v-4"/></svg>
-      Señas
-    </button>
-    <button class="nav-btn" onclick="switchTab('frases',this)">
-      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Frases
-    </button>
-    <button class="nav-btn" onclick="switchTab('escribir',this)">
-      <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Escribir
-    </button>
-    <button class="nav-btn" onclick="switchTab('historial',this);cargarHistorial()">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Historial
-    </button>
-  </nav>
+      // ── Unirse a sala ──────────────────────────────────────────
+      async function unirseASala() {
+        const codigo = document
+          .getElementById("codigo-input")
+          .value.trim()
+          .toUpperCase();
+        if (codigo.length !== 6) {
+          mostrarError("El código debe tener 6 caracteres.");
+          return;
+        }
+        const btn = document.getElementById("btn-unirse");
+        btn.disabled = true;
+        btn.textContent = "Verificando...";
+        document.getElementById("error-msg").style.display = "none";
 
-  <script>
-    const statusText = document.getElementById('statusText');
-    const socket = new WebSocket("ws://localhost:8000/ws/estudiante");
+        const res = await fetch(`/api/validar-codigo/${codigo}`);
+        if (!res.ok) {
+          mostrarError("Código inválido o sesión no encontrada.");
+          btn.disabled = false;
+          btn.textContent = "Unirse →";
+          return;
+        }
+        codigoSala = codigo;
+        conectarWebSocket(codigo);
+      }
 
-    socket.onopen = () => { statusText.textContent = 'Conectado'; };
-    socket.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      const tipo = msg.tipo === 'voz' ? 'coord' : 'frase';
-      const label = msg.tipo === 'voz' ? 'Coordinador' : 'Frase rápida';
-      agregarMsg(msg.contenido, tipo, label);
-      document.getElementById('chat-hora').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-    };
-    socket.onclose = () => {
-      statusText.textContent = 'Desconectado';
-      document.querySelector('.status-pill .dot').style.background = '#EF4444';
-      statusText.style.color = '#EF4444';
-    };
+      function mostrarError(msg) {
+        const e = document.getElementById("error-msg");
+        e.textContent = msg;
+        e.style.display = "block";
+      }
 
-    function agregarMsg(contenido, tipo, label) {
-      ['chat-messages-senas','chat-messages-escribir'].forEach(id => {
-        const c = document.getElementById(id);
-        const empty = c.querySelector('.chat-empty-msg');
+      function conectarWebSocket(codigo) {
+        socket = new WebSocket(`ws://localhost:8000/ws/estudiante/${codigo}`);
+
+        socket.onopen = () => {
+          document.getElementById("unirse-screen").style.display = "none";
+          document.getElementById("main-content").classList.add("visible");
+          document.getElementById("status-pill").style.display = "flex";
+          document.getElementById("topbar-sub").textContent = "Sala: " + codigo;
+          document.getElementById("btn-unirse").disabled = false;
+          document.getElementById("btn-unirse").textContent = "Unirse →";
+          document.getElementById('btn-salir').style.display = 'block';
+        };
+
+        socket.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.tipo === "codigo_sala") return;
+          const esCoord =
+            msg.tipo === "voz" ||
+            msg.tipo === "texto" ||
+            msg.tipo === "frase_rapida";
+          const tipo = esCoord ? "coord" : "yo";
+          const label = esCoord ? "Coordinador" : "Tú";
+          Accesibilidad.pulsoMensajeNuevo()
+          agregarMsg(msg.contenido, tipo, label);
+          document.getElementById("chat-hora").textContent =
+            new Date().toLocaleTimeString("es-CL", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          // TTS para mensajes del coordinador
+          if (esCoord) hablar(msg.contenido, null);
+        };
+
+        socket.onclose = (e) => {
+          if (e.code === 4001) {
+            mostrarError("Código inválido o sesión no encontrada.");
+            document.getElementById("btn-unirse").disabled = false;
+            document.getElementById("btn-unirse").textContent = "Unirse →";
+            return;
+          }
+          document.getElementById("statusText").textContent = "Desconectado";
+          document.querySelector(".status-pill .dot").style.background =
+            "#EF4444";
+          document.getElementById("statusText").style.color = "#EF4444";
+        };
+      }
+
+      // ── Mensajes ───────────────────────────────────────────────
+      function agregarMsg(contenido, tipo, label) {
+        const c = document.getElementById("chat-messages");
+        const empty = c.querySelector(".chat-empty-msg");
         if (empty) empty.remove();
-        const d = document.createElement('div');
-        d.className = 'msg ' + tipo;
+        const d = document.createElement("div");
+        d.className = "msg " + tipo;
         d.innerHTML = `<div class="msg-label">${label}</div><div class="msg-text">${contenido}</div>`;
         c.appendChild(d);
         c.scrollTop = c.scrollHeight;
-      });
-    }
+      }
 
-    function switchTab(name, btn) {
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + name).classList.add('active');
-      btn.classList.add('active');
-    }
+      // ── Tabs ───────────────────────────────────────────────────
+      function switchTab(name, btn) {
+        ["escribir", "frases", "senas", "historial"].forEach((t) => {
+          document.getElementById("panel-" + t).classList.remove("active");
+          document.getElementById("tab-" + t).classList.remove("active");
+        });
+        document.getElementById("panel-" + name).classList.add("active");
+        btn.classList.add("active");
+      }
 
-    const frasesEst = ["No entendí, ¿puede repetir?","Tengo una pregunta","¿Puede escribirlo?","Entendí, gracias","Necesito ayuda con mi malla","¿Cuándo es el plazo?"];
-    const frasesCoord = ["¿Me entiendes?","Espera un momento","Muy bien","Es tu turno"];
+      // ── Frases rápidas ─────────────────────────────────────────
+      const frasesEst = [
+        "No entendí, ¿puede repetir?",
+        "Tengo una pregunta",
+        "¿Puede escribirlo?",
+        "Entendí, gracias",
+        "Necesito ayuda",
+        "¿Cuándo es el plazo?",
+      ];
+      const frasesCoordRef = [
+        "¿Me entiendes?",
+        "Espera un momento",
+        "Muy bien",
+        "Es tu turno",
+      ];
 
-    function crearFrases(frases, id) {
-      const grid = document.getElementById(id);
-      frases.forEach(f => {
-        const btn = document.createElement('button');
-        btn.className = 'frase-btn';
-        btn.textContent = f;
-        btn.onclick = () => {
-          hablar(f, btn);
-          if (socket.readyState === 1) socket.send(JSON.stringify({tipo:'frase_rapida',contenido:f}));
-          agregarMsg(f, 'estudiante', 'Tú (frase rápida)');
-        };
-        grid.appendChild(btn);
-      });
-    }
-    crearFrases(frasesEst, 'frases-est');
-    crearFrases(frasesCoord, 'frases-coord');
+      function crearFrases(frases, id, enviar) {
+        const grid = document.getElementById(id);
+        frases.forEach((f) => {
+          const btn = document.createElement("button");
+          btn.className = "frase-btn";
+          btn.textContent = f;
+          if (enviar) {
+            btn.onclick = () => {
+              hablar(f, btn);
+              if (socket && socket.readyState === 1)
+                socket.send(
+                  JSON.stringify({ tipo: "frase_rapida", contenido: f }),
+                );
+              agregarMsg(f, "frase", "Tú (frase)");
+              document.getElementById("chat-hora").textContent =
+                new Date().toLocaleTimeString("es-CL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+            };
+          }
+          grid.appendChild(btn);
+        });
+      }
+      crearFrases(frasesEst, "frases-est", true);
+      crearFrases(frasesCoordRef, "frases-coord", false);
 
-    function hablar(txt, btn) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(txt);
-      u.lang = 'es-CL'; u.rate = 0.95;
-      if (btn) { btn.classList.add('hablando'); u.onend = () => btn.classList.remove('hablando'); }
-      window.speechSynthesis.speak(u);
-    }
+      function hablar(txt, btn) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(txt);
+        u.lang = "es-CL";
+        u.rate = 0.95;
+        if (btn) {
+          btn.classList.add("hablando");
+          u.onend = () => btn.classList.remove("hablando");
+        }
+        window.speechSynthesis.speak(u);
+      }
 
-    function enviarEscrito() {
-      const txt = document.getElementById('mi-respuesta').value.trim();
-      if (!txt) return;
-      if (socket.readyState === 1) socket.send(JSON.stringify({tipo:'texto',contenido:txt}));
-      agregarMsg(txt, 'estudiante', 'Tú');
-      document.getElementById('mi-respuesta').value = '';
-    }
-
-    function leerEscrito() {
-      const txt = document.getElementById('mi-respuesta').value;
-      if (txt.trim()) hablar(txt, null);
-    }
-
-    async function cargarHistorial() {
-      const c = document.getElementById('historial-container');
-      c.innerHTML = '<div class="loading">Cargando...</div>';
-      try {
-        const res = await fetch('/api/historial');
-        const sesiones = await res.json();
-        if (!sesiones.length) {
-          c.innerHTML = '<div class="historial-empty"><div class="icon">📋</div><div>No hay sesiones registradas</div></div>';
+      // ── Escribir ───────────────────────────────────────────────
+      function enviarEscrito() {
+        const txt = document.getElementById("mi-respuesta").value.trim();
+        if (!txt) return;
+        if (!socket || socket.readyState !== 1) {
+          alert("No hay conexión con la sala.");
+          Accesibilidad.confirmarEnvio('✅ Mensaje enviado'); 
           return;
         }
-        c.innerHTML = '';
-        sesiones.forEach(s => {
-          const div = document.createElement('div');
-          div.className = 'historial-sesion';
-          const msgs = s.mensajes.map(m =>
-            `<div class="historial-msg ${m.tipo}" style="display:flex;flex-direction:column">
-              <div class="historial-hora">${m.hora} — ${m.tipo}</div>
-              ${m.contenido}
-            </div>`
-          ).join('') || '<div style="color:#94A3B8;font-size:13px">Sin mensajes</div>';
-          div.innerHTML = `
+        socket.send(JSON.stringify({ tipo: "texto", contenido: txt }));
+        agregarMsg(txt, "yo", "Tú");
+        document.getElementById("chat-hora").textContent =
+          new Date().toLocaleTimeString("es-CL", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        document.getElementById("mi-respuesta").value = "";
+      }
+
+      function leerEscrito() {
+        const txt = document.getElementById("mi-respuesta").value;
+        if (txt.trim()) hablar(txt, null);
+      }
+
+      // ── Historial ──────────────────────────────────────────────
+      async function cargarHistorial() {
+        const c = document.getElementById("historial-container");
+        c.innerHTML = '<div class="loading">Cargando...</div>';
+        try {
+          const res = await fetch("/api/historial");
+          const sesiones = await res.json();
+          if (!sesiones.length) {
+            c.innerHTML =
+              '<div class="historial-empty">📋 No hay sesiones registradas</div>';
+            return;
+          }
+          c.innerHTML = "";
+          sesiones.forEach((s) => {
+            const div = document.createElement("div");
+            div.className = "historial-sesion";
+            const msgs =
+              s.mensajes
+                .map(
+                  (m) =>
+                    `<div class="historial-msg ${m.tipo}" style="display:flex;flex-direction:column">
+              <div class="historial-hora">${m.hora}</div>${m.contenido}
+            </div>`,
+                )
+                .join("") ||
+              '<div style="color:#94A3B8;font-size:12px;padding:4px">Sin mensajes</div>';
+            div.innerHTML = `
             <div class="historial-header">
               <div class="historial-fecha">📅 ${s.iniciada_en}</div>
               <div class="historial-duracion">hasta ${s.finalizada_en}</div>
             </div>
             <div class="historial-body">${msgs}</div>`;
-          c.appendChild(div);
-        });
-      } catch(e) {
-        c.innerHTML = '<div class="historial-empty"><div class="icon">⚠️</div><div>Error al cargar</div></div>';
+            c.appendChild(div);
+          });
+        } catch (e) {
+          c.innerHTML = '<div class="historial-empty">⚠️ Error al cargar</div>';
+        }
       }
-    }
-  </script>
-</body>
+      function salirDeSala() {
+        if (!confirm("¿Salir de la sala?")) return;
+        if (socket) socket.close();
+        document.getElementById("main-content").classList.remove("visible");
+        document.getElementById("unirse-screen").style.display = "flex";
+        document.getElementById("status-pill").style.display = "none";
+        document.getElementById("btn-salir").style.display = "none";
+        document.getElementById("topbar-sub").textContent =
+          "Vista del estudiante";
+        document.getElementById("chat-messages").innerHTML =
+          '<div class="chat-empty-msg">Esperando mensajes del coordinador...</div>';
+        codigoSala = null;
+        socket = null;
+      }
+    </script>
+  </body>
 </html>
