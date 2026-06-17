@@ -1084,6 +1084,15 @@
       let reconocedor;
       let codigoActual = null;
 
+      // ── TTS ────────────────────────────────────────────────────
+      function hablar(txt) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(txt);
+        u.lang = "es-CL";
+        u.rate = 0.95;
+        window.speechSynthesis.speak(u);
+      }
+
       // ── Crear sala ─────────────────────────────────────────────
       async function crearSala() {
         const btn = document.getElementById("btn-crear");
@@ -1106,7 +1115,8 @@
       }
 
       function conectarWebSocket() {
-        socket = new WebSocket("ws://localhost:8000/ws/coordinador");
+        const proto = location.protocol === "https:" ? "wss:" : "ws:";
+        socket = new WebSocket(`${proto}//${location.host}/ws/coordinador`);
         socket.onmessage = (event) => {
           const msg = JSON.parse(event.data);
           if (msg.tipo === "codigo_sala") return;
@@ -1191,7 +1201,8 @@
         }
         socket.send(JSON.stringify({ tipo: "texto", contenido: txt }));
         agregarMsg(txt, "coord", "Tú (texto)");
-        Accesibilidad.confirmarEnvio("✅ Mensaje enviado"); // ← aquí
+        hablar(txt);
+        Accesibilidad.confirmarEnvio("✅ Mensaje enviado");
         document.getElementById("texto-coord").value = "";
       }
 
@@ -1291,6 +1302,7 @@
           if (socket && socket.readyState === 1)
             socket.send(JSON.stringify({ tipo: "frase_rapida", contenido: f }));
           agregarMsg(f, "coord", "Tú (frase rápida)");
+          hablar(f);
           Accesibilidad.confirmarEnvio("✅ Frase enviada");
         };
         grid.appendChild(btn);

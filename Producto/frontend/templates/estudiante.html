@@ -615,6 +615,7 @@
           <div class="dot"></div>
           <span id="statusText">Conectado</span>
         </div>
+
         <button
           id="btn-salir"
           onclick="salirDeSala()"
@@ -631,7 +632,23 @@
             cursor: pointer;
           "
         >
-          Salir
+          Salir de sala
+        </button>
+        <button
+          onclick="cerrarSesion()"
+          style="
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: &quot;DM Sans&quot;;
+            cursor: pointer;
+          "
+        >
+          Cerrar sesión
         </button>
       </div>
     </div>
@@ -798,11 +815,15 @@
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             enviarEscrito();
-            
           }
         });
 
       // ── Unirse a sala ──────────────────────────────────────────
+      function cerrarSesion() {
+        if (socket) socket.close();
+        sessionStorage.clear();
+        window.location.href = "/login";
+      }
       async function unirseASala() {
         const codigo = document
           .getElementById("codigo-input")
@@ -844,7 +865,7 @@
           document.getElementById("topbar-sub").textContent = "Sala: " + codigo;
           document.getElementById("btn-unirse").disabled = false;
           document.getElementById("btn-unirse").textContent = "Unirse →";
-          document.getElementById('btn-salir').style.display = 'block';
+          document.getElementById("btn-salir").style.display = "block";
         };
 
         socket.onmessage = (event) => {
@@ -856,7 +877,7 @@
             msg.tipo === "frase_rapida";
           const tipo = esCoord ? "coord" : "yo";
           const label = esCoord ? "Coordinador" : "Tú";
-          Accesibilidad.pulsoMensajeNuevo()
+          Accesibilidad.pulsoMensajeNuevo();
           agregarMsg(msg.contenido, tipo, label);
           document.getElementById("chat-hora").textContent =
             new Date().toLocaleTimeString("es-CL", {
@@ -964,11 +985,11 @@
         if (!txt) return;
         if (!socket || socket.readyState !== 1) {
           alert("No hay conexión con la sala.");
-          Accesibilidad.confirmarEnvio('✅ Mensaje enviado'); 
           return;
         }
         socket.send(JSON.stringify({ tipo: "texto", contenido: txt }));
         agregarMsg(txt, "yo", "Tú");
+        Accesibilidad.confirmarEnvio("✅ Mensaje enviado"); // ← aquí, fuera del if
         document.getElementById("chat-hora").textContent =
           new Date().toLocaleTimeString("es-CL", {
             hour: "2-digit",
