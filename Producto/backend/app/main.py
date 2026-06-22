@@ -1,8 +1,10 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form
 from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi import Header, HTTPException, Depends
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.core.database import engine, Base, SessionLocal
-from app.core.auth import verificar_password, crear_token
+from app.core.auth import verificar_password, crear_token, extraer_bearer, usuario_desde_token, hashear_password
 from app.models import models
 from datetime import datetime
 import json
@@ -26,12 +28,10 @@ class SalaManager:
         self.codigo: str = None
 
     def iniciar_sesion(self, db: Session, coordinador_id: int = None):
-        # Generar código único
         codigo = generar_codigo()
         while db.query(models.Sesion).filter_by(codigo=codigo, finalizada_en=None).first():
             codigo = generar_codigo()
 
-        # Usar coordinador real si viene del login, sino usar demo
         if not coordinador_id:
             coord = db.query(models.Usuario).filter_by(rol_id=2).first()
             if not coord:
@@ -77,6 +77,19 @@ class SalaManager:
 
 sala = SalaManager()
 
+# ── Auth helpers ───────────────────────────────────────────────
+def requiere_auth(authorization: Optional[str] = Header(None)) -> dict:
+    token = extraer_bearer(authorization)
+    usuario = usuario_desde_token(token)
+    if not usuario:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+    return usuario
+
+def requiere_rol_admin(usuario: dict = Depends(requiere_auth)):
+    if usuario.get("rol") != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores")
+    return usuario
+
 # ── Rutas HTML ─────────────────────────────────────────────────
 @app.get("/login")
 async def login_page():
@@ -92,6 +105,16 @@ async def coordinador_page():
 async def estudiante_page():
     with open("../frontend/templates/estudiante.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
+
+@app.get("/admin")
+async def admin_page():
+    with open("../frontend/templates/admin.html", encoding="utf-8") as f:
+        return HTMLResponse(f.read())
+
+@app.get("/js/accesibilidad.js")
+async def accesibilidad_js():
+    with open("../frontend/js/accesibilidad.js", encoding="utf-8") as f:
+        return Response(content=f.read(), media_type="application/javascript")
 
 # ── API: Login ─────────────────────────────────────────────────
 @app.post("/api/login")
@@ -117,6 +140,11 @@ async def login(email: str = Form(...), password: str = Form(...)):
         }
     finally:
         db.close()
+
+# ── API: Me ────────────────────────────────────────────────────
+@app.get("/api/me")
+async def me(usuario: dict = Depends(requiere_auth)):
+    return {"id": usuario["id"], "nombre": usuario["nombre"], "rol": usuario["rol"]}
 
 # ── API: Crear sala ────────────────────────────────────────────
 @app.post("/api/crear-sala")
@@ -176,23 +204,9 @@ async def get_historial():
     finally:
         db.close()
 
-from fastapi import Header, HTTPException, Depends
-from typing import Optional
-from app.core.auth import extraer_bearer, usuario_desde_token
-
-def requiere_auth(authorization: Optional[str] = Header(None)) -> dict:
-    token = extraer_bearer(authorization)
-    usuario = usuario_desde_token(token)
-    if not usuario:
-        raise HTTPException(status_code=401, detail="Token inválido o expirado")
-    return usuario
-
-@app.get("/api/me")
-async def me(usuario: dict = Depends(requiere_auth)):
-    return {"id": usuario["id"], "nombre": usuario["nombre"], "rol": usuario["rol"]}
-
+# ── API: Frases rápidas ────────────────────────────────────────
 @app.get("/api/frases-rapidas")
-async def listar_frases(dirigida_a: Optional[str] = None, usuario: dict = Depends(requiere_auth)):
+async def listar_frases(dirigida_a: Optional[str] = None):
     db = SessionLocal()
     try:
         q = db.query(models.FraseRapida).filter_by(activa=1)
@@ -201,7 +215,7 @@ async def listar_frases(dirigida_a: Optional[str] = None, usuario: dict = Depend
         frases = q.all()
         return [{"id": f.id, "contenido": f.contenido, "dirigida_a": f.dirigida_a, "categoria": f.categoria} for f in frases]
     finally:
-        db.close()        
+        db.close()
 
 # ── WebSocket Coordinador ──────────────────────────────────────
 @app.websocket("/ws/coordinador")
@@ -210,28 +224,55 @@ async def ws_coordinador(websocket: WebSocket):
     sala.coordinador = websocket
     db: Session = SessionLocal()
 
-    # Si no hay sesión activa, crear una
+    # Si no hay sesión activa, crear una. Si ya había una (p. ej. el
+    # coordinador se reconectó tras un refresh), se reutiliza la misma
+    # sesión y el mismo código — ya no se pierde nada.
     if not sala.sesion_id:
         sala.iniciar_sesion(db)
 
-    # Enviar el código al coordinador
+    # Enviar el código de la sala
     await websocket.send_text(json.dumps({
         "tipo": "codigo_sala",
         "contenido": sala.codigo
+    }))
+
+    # Avisar cuántos estudiantes ya están conectados
+    await websocket.send_text(json.dumps({
+        "tipo": "estado_sala",
+        "conectados": len(sala.estudiantes)
     }))
 
     try:
         while True:
             data = await websocket.receive_text()
             msg = json.loads(data)
+
             if msg.get("tipo") == "ping":
                 continue
+
+            if msg.get("tipo") == "terminar_sesion":
+                # Cierre explícito pedido por el coordinador
+                sala.cerrar_sesion(db)
+                for est in list(sala.estudiantes):
+                    try:
+                        await est.send_text(json.dumps({"tipo": "sesion_finalizada"}))
+                        await est.close()
+                    except Exception:
+                        pass
+                sala.estudiantes.clear()
+                break
+
             sala.guardar_transcripcion(db, msg["contenido"], msg["tipo"])
             for est in sala.estudiantes:
                 await est.send_text(json.dumps(msg))
+
     except WebSocketDisconnect:
-        sala.cerrar_sesion(db)
-        sala.coordinador = None
+        # Refresh del coordinador: NO cerramos la sesión,
+        # se reconecta y retoma el mismo código.
+        pass
+    finally:
+        if sala.coordinador is websocket:
+            sala.coordinador = None
         db.close()
 
 # ── WebSocket Estudiante ───────────────────────────────────────
@@ -252,6 +293,17 @@ async def ws_estudiante(websocket: WebSocket, codigo: str):
     await websocket.accept()
     sala.estudiantes.append(websocket)
 
+    # Avisar al coordinador cuántos estudiantes hay ahora
+    if sala.coordinador:
+        try:
+            await sala.coordinador.send_text(json.dumps({
+                "tipo": "estudiante_conectado",
+                "contenido": "Un estudiante se conectó",
+                "conectados": len(sala.estudiantes)
+            }))
+        except Exception:
+            pass
+
     try:
         while True:
             data = await websocket.receive_text()
@@ -259,28 +311,24 @@ async def ws_estudiante(websocket: WebSocket, codigo: str):
             sala.guardar_transcripcion(db, msg["contenido"], msg["tipo"])
             if sala.coordinador:
                 await sala.coordinador.send_text(json.dumps(msg))
-    except WebSocketDisconnect:
-        sala.estudiantes.remove(websocket)
-        db.close()
-@app.get("/js/accesibilidad.js")
-async def accesibilidad_js():
-    with open("../frontend/js/accesibilidad.js", encoding="utf-8") as f:
-        return Response(content=f.read(), media_type="application/javascript")
-    # ── Admin: dependencia rol ─────────────────────────────────────
-def requiere_rol_admin(usuario: dict = Depends(requiere_auth)):
-    if usuario.get("rol") != "admin":
-        raise HTTPException(status_code=403, detail="Solo administradores")
-    return usuario
 
-# ── Admin: ruta HTML ───────────────────────────────────────────
-@app.get("/admin")
-async def admin_page():
-    with open("../frontend/templates/admin.html", encoding="utf-8") as f:
-        return HTMLResponse(f.read())
+    except WebSocketDisconnect:
+        if websocket in sala.estudiantes:
+            sala.estudiantes.remove(websocket)
+        # Avisar al coordinador que un estudiante se fue
+        if sala.coordinador:
+            try:
+                await sala.coordinador.send_text(json.dumps({
+                    "tipo": "estudiante_desconectado",
+                    "contenido": "Un estudiante se desconectó",
+                    "conectados": len(sala.estudiantes)
+                }))
+            except Exception:
+                pass
+    finally:
+        db.close()
 
 # ── Admin: Usuarios ────────────────────────────────────────────
-from app.core.auth import hashear_password
-
 @app.get("/api/admin/usuarios")
 async def admin_listar_usuarios(admin: dict = Depends(requiere_rol_admin)):
     db = SessionLocal()
@@ -431,7 +479,6 @@ async def admin_eliminar_sesion(sesion_id: int, admin: dict = Depends(requiere_r
 
 @app.delete("/api/admin/sesiones")
 async def admin_eliminar_sesiones_masivo(ids: Optional[str] = None, estado: Optional[str] = None, admin: dict = Depends(requiere_rol_admin)):
-    from fastapi import Query as Q
     db = SessionLocal()
     try:
         if ids:
@@ -532,7 +579,3 @@ async def admin_auditoria(accion: Optional[str] = None, admin: dict = Depends(re
                  "creado_en": a.creado_en.strftime("%d/%m/%Y %H:%M") if a.creado_en else ""} for a in registros]
     finally:
         db.close()
-@app.get("/admin")
-async def admin_page():
-    with open("../frontend/templates/admin.html", encoding="utf-8") as f:
-        return HTMLResponse(f.read())        

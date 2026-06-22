@@ -1,119 +1,235 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpeakingHands — Iniciar sesión</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --navy: #0F2744; --blue: #2563EB; --teal: #0D9488;
-      --gray-bg: #F8FAFC; --gray-border: #E2E8F0;
-      --gray-muted: #94A3B8; --text: #0F172A;
-      --danger: #EF4444; --radius: 14px; --radius-sm: 8px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--gray-bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-
-    .card { background: white; border-radius: var(--radius); padding: 40px 32px; width: 100%; max-width: 400px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-
-    .logo { text-align: center; margin-bottom: 32px; }
-    .logo-title { font-size: 24px; font-weight: 600; color: var(--navy); }
-    .logo-sub { font-size: 13px; color: var(--gray-muted); margin-top: 4px; }
-
-    .form-group { margin-bottom: 16px; }
-    label { font-size: 13px; font-weight: 500; color: var(--text); display: block; margin-bottom: 6px; }
-    input { width: 100%; border: 1.5px solid var(--gray-border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; font-family: 'DM Sans'; color: var(--text); outline: none; transition: border-color 0.2s; }
-    input:focus { border-color: var(--blue); }
-
-    .btn-login { width: 100%; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: 'DM Sans'; margin-top: 8px; transition: background 0.2s; }
-    .btn-login:hover { background: #1A3A5C; }
-    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .error { background: #FEE2E2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; color: var(--danger); margin-top: 12px; display: none; }
-
-    .roles-info { display: flex; gap: 8px; margin-top: 24px; }
-    .rol-badge { flex: 1; text-align: center; padding: 10px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; }
-    .rol-badge.coord { background: #EFF6FF; color: var(--blue); border: 1px solid #BFDBFE; }
-    .rol-badge.est { background: #F0FDF9; color: var(--teal); border: 1px solid #99F6E4; }
-    .rol-badge .icon { font-size: 20px; display: block; margin-bottom: 4px; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="logo">
-      <div class="logo-title">SpeakingHands</div>
-      <div class="logo-sub">Plataforma de comunicación inclusiva</div>
-    </div>
-
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Correo electrónico</label>
-        <input type="email" id="email" placeholder="tu@correo.cl" required>
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="password" placeholder="••••••••" required>
-      </div>
-      <button type="submit" class="btn-login" id="btnLogin">Iniciar sesión</button>
-      <div class="error" id="errorMsg">Correo o contraseña incorrectos.</div>
-    </form>
-
-    <div class="roles-info">
-      <div class="rol-badge coord">
-        
-        Coordinador
-      </div>
-      <div class="rol-badge est">
-        
-        Estudiante
-      </div>
-    </div>
-  </div>
-
-  <script>
-    document.getElementById('loginForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btnLogin');
-      const errorMsg = document.getElementById('errorMsg');
-      btn.disabled = true;
-      btn.textContent = 'Ingresando...';
-      errorMsg.style.display = 'none';
-
-      const formData = new FormData();
-      formData.append('email', document.getElementById('email').value);
-      formData.append('password', document.getElementById('password').value);
-
-      try {
-        const res = await fetch('/api/login', { method: 'POST', body: formData });
-        const data = await res.json();
-
-        if (res.ok) {
-          // Guardar token y datos en sessionStorage
-          sessionStorage.setItem('token', data.token);
-          sessionStorage.setItem('nombre', data.nombre);
-          sessionStorage.setItem('rol', data.rol);
-
-          // Redirigir según rol
-          if (data.rol === 'coordinador') {
-            window.location.href = '/coordinador';
-          } else if (data.rol === 'estudiante') {
-            window.location.href = '/estudiante';
-          } else {
-            window.location.href = '/';
-          }
-        } else {
-          errorMsg.style.display = 'block';
-          btn.disabled = false;
-          btn.textContent = 'Iniciar sesión';
-        }
-      } catch (err) {
-        errorMsg.style.display = 'block';
-        errorMsg.textContent = 'Error de conexión. Verifica que el servidor esté activo.';
-        btn.disabled = false;
-        btn.textContent = 'Iniciar sesión';
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpeakingHands — Iniciar sesión</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --navy: #0f2744;
+        --blue: #2563eb;
+        --teal: #0d9488;
+        --gray-bg: #f8fafc;
+        --gray-border: #e2e8f0;
+        --gray-muted: #94a3b8;
+        --text: #0f172a;
+        --danger: #ef4444;
+        --radius: 14px;
+        --radius-sm: 8px;
       }
-    };
-  </script>
-</body>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--gray-bg);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 40px 32px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .logo-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--navy);
+      }
+      .logo-sub {
+        font-size: 13px;
+        color: var(--gray-muted);
+        margin-top: 4px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+      label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+        display: block;
+        margin-bottom: 6px;
+      }
+      input {
+        width: 100%;
+        border: 1.5px solid var(--gray-border);
+        border-radius: var(--radius-sm);
+        padding: 12px 14px;
+        font-size: 15px;
+        font-family: "DM Sans";
+        color: var(--text);
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      input:focus {
+        border-color: var(--blue);
+      }
+
+      .btn-login {
+        width: 100%;
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "DM Sans";
+        margin-top: 8px;
+        transition: background 0.2s;
+      }
+      .btn-login:hover {
+        background: #1a3a5c;
+      }
+      .btn-login:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .error {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--danger);
+        margin-top: 12px;
+        display: none;
+      }
+
+      .roles-info {
+        display: flex;
+        gap: 8px;
+        margin-top: 24px;
+      }
+      .rol-badge {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .rol-badge.coord {
+        background: #eff6ff;
+        color: var(--blue);
+        border: 1px solid #bfdbfe;
+      }
+      .rol-badge.est {
+        background: #f0fdf9;
+        color: var(--teal);
+        border: 1px solid #99f6e4;
+      }
+      .rol-badge .icon {
+        font-size: 20px;
+        display: block;
+        margin-bottom: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="logo">
+        <div class="logo-title">SpeakingHands</div>
+        <div class="logo-sub">Plataforma de comunicación inclusiva</div>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="email" placeholder="tu@correo.cl" required />
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+        <button type="submit" class="btn-login" id="btnLogin">
+          Iniciar sesión
+        </button>
+        <div class="error" id="errorMsg">Correo o contraseña incorrectos.</div>
+      </form>
+
+      <div class="roles-info">
+        <div class="rol-badge coord">Coordinador</div>
+        <div class="rol-badge est">Estudiante</div>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById("loginForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("btnLogin");
+        const errorMsg = document.getElementById("errorMsg");
+        btn.disabled = true;
+        btn.textContent = "Ingresando...";
+        errorMsg.style.display = "none";
+
+        const formData = new FormData();
+        formData.append("email", document.getElementById("email").value);
+        formData.append("password", document.getElementById("password").value);
+
+        try {
+          const res = await fetch("/api/login", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            // Guardar token y datos en sessionStorage
+            sessionStorage.setItem("token", data.token);
+            sessionStorage.setItem("nombre", data.nombre);
+            sessionStorage.setItem("rol", data.rol);
+
+            // Redirigir según rol
+            if (data.rol === "coordinador") {
+              window.location.href = "/coordinador";
+            } else if (data.rol === "estudiante") {
+              window.location.href = "/estudiante";
+            } else if (data.rol === "admin") {
+              window.location.href = "/admin";
+            } else {
+              window.location.href = "/";
+            }
+          } else {
+            errorMsg.style.display = "block";
+            btn.disabled = false;
+            btn.textContent = "Iniciar sesión";
+          }
+        } catch (err) {
+          errorMsg.style.display = "block";
+          errorMsg.textContent =
+            "Error de conexión. Verifica que el servidor esté activo.";
+          btn.disabled = false;
+          btn.textContent = "Iniciar sesión";
+        }
+      };
+    </script>
+  </body>
 </html>
