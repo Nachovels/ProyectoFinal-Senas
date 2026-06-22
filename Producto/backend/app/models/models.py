@@ -39,6 +39,7 @@ class FraseRapida(Base):
     id = Column(Integer, primary_key=True, index=True)
     contenido = Column(String(255), nullable=False)
     dirigida_a = Column(Enum("coordinador", "estudiante"), nullable=False)
+    categoria = Column(String(50), default="General")
     activa = Column(Integer, default=1)
 
 class Sena(Base):

@@ -852,9 +852,144 @@
         background: var(--navy);
         border-radius: 0 0 3px 3px;
       }
+      .frase-categoria {
+        border: 1.5px solid var(--gray-border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 8px;
+        overflow: hidden;
+        background: white;
+      }
+      .frase-cat-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        background: white;
+        border: none;
+        cursor: pointer;
+        font-family: "DM Sans";
+        text-align: left;
+        transition: background 0.15s;
+      }
+      .frase-cat-header:hover {
+        background: var(--gray-bg);
+      }
+      .frase-cat-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .frase-cat-titulo {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--navy);
+      }
+      .frase-cat-chevron {
+        font-size: 10px;
+        color: var(--gray-muted);
+        transition: transform 0.2s;
+      }
+      .frase-categoria.abierta .frase-cat-chevron {
+        transform: rotate(180deg);
+      }
+      .frase-cat-body {
+        display: none;
+        padding: 0 12px 12px;
+      }
+      .frase-categoria.abierta .frase-cat-body {
+        display: block;
+      }
+    #main-content {
+      padding: 16px 16px 0;
+    }
+    .codigo-mini {
+      margin-bottom: 14px;
+    }
+    .chat-area {
+      margin-bottom: 14px;
+    }
+    .content {
+      padding: 0 0 calc(var(--tab-height) + 16px);
+    }
+    .estudiantes-mini-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 5px 10px;
+      font-size: 13px;
+      color: white;          /* ← esto lo hace blanco */
+      font-weight: 500;
+    }
+    @media (max-width: 420px) {
+  body { max-width: 100%; }
+ 
+  .topbar { padding: 12px 14px 10px; }
+  .topbar-title { font-size: 15px; }
+  .topbar-sub { font-size: 11px; }
+  .session-pill { padding: 4px 8px; }
+  .session-pill span { font-size: 11px; }
+ 
+  /* Barra de código de sala */
+  .codigo-mini {
+    padding: 10px 12px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .codigo-mini-value { font-size: 17px; }
+  .codigo-mini-label { font-size: 10px; }
+  .estudiantes-mini-badge { font-size: 11px; padding: 4px 8px; }
+  .btn-copiar-mini { font-size: 11px; padding: 5px 10px; }
+ 
+  /* Chat */
+  .chat-messages { min-height: 160px; max-height: 220px; }
+  .msg { max-width: 90%; font-size: 13px; }
+ 
+  /* Escribir */
+  .compose-input { font-size: 14px; }
+  .btn-enviar { padding: 10px 12px; font-size: 13px; }
+ 
+  /* Frases */
+  .frases-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .frase-btn { font-size: 12px; padding: 10px 8px; }
+  .frase-cat-titulo { font-size: 13px; }
+  .frase-cat-header { padding: 10px 12px; }
+ 
+  /* Micrófono */
+  .mic-row { padding: 10px 12px; }
+  .btn-hablar { font-size: 13px; padding: 11px; }
+  .btn-detener { font-size: 13px; padding: 11px 14px; }
+  .btn-terminar { font-size: 12px; padding: 9px 14px; }
+ 
+  /* Nav tabs */
+  .nav-btn { font-size: 9px; }
+  .nav-btn svg { width: 20px; height: 20px; }
+ 
+  /* Contenido principal */
+  #main-content { padding: 12px 12px 0; }
+ 
+  /* Pantalla crear sala */
+  .sala-card { padding: 24px 16px; }
+  .sala-icon { font-size: 36px; }
+  .codigo-value { font-size: 36px; }
+  .btn-crear { font-size: 14px; padding: 12px; }
+}
+ 
+@media (max-width: 360px) {
+  .topbar-title { font-size: 14px; }
+  .codigo-mini-value { font-size: 15px; }
+  .frases-grid { grid-template-columns: 1fr; }
+  .chat-messages { max-height: 180px; }
+  /* En pantallas muy chicas oculta el botón copiar para ganar espacio */
+  .btn-copiar-mini { display: none; }
+}
+   
     </style>
     <script src="/js/accesibilidad.js"></script>
-  </head>
+</head>
   <body>
     <div class="topbar">
       <div class="topbar-left">
@@ -907,31 +1042,35 @@
     </div>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <div style="display: none" id="main-content">
+    <div id="main-content" style="display: none">
+      <div class="codigo-mini">
+        <div>
+          <div class="codigo-mini-label">Código de sala</div>
+          <div class="codigo-mini-value" id="codigo-mini-val">——</div>
+        </div>
+        <div class="estudiantes-mini-badge" id="estudiantes-mini-badge">
+          👥 <span id="est-count-mini">0</span> conectado(s)
+        </div>
+        <button class="btn-copiar-mini" onclick="copiarCodigo()">
+          📋 Copiar
+        </button>
+      </div>
+
+      <!-- CHAT: fijo arriba, visible en TODAS las pestañas -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <div class="dot"></div>
+          <div class="chat-title">Sesión con estudiante</div>
+          <div class="chat-sub" id="chat-sub">activo</div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-empty">La conversación aparecerá aquí</div>
+        </div>
+      </div>
+
       <div class="content">
-        <!-- CONVERSACIÓN -->
+        <!-- CONVERSACIÓN (escribir / voz) -->
         <div class="tab-content active" id="tab-chat">
-          <div class="codigo-mini">
-            <div>
-              <div class="codigo-mini-label">Código de sala</div>
-              <div class="codigo-mini-value" id="codigo-mini-val">——</div>
-            </div>
-            <button class="btn-copiar-mini" onclick="copiarCodigo()">
-              📋 Copiar
-            </button>
-          </div>
-
-          <div class="chat-area">
-            <div class="chat-header">
-              <div class="dot"></div>
-              <div class="chat-title">Sesión con estudiante</div>
-              <div class="chat-sub" id="chat-sub">activo</div>
-            </div>
-            <div class="chat-messages" id="chat-messages">
-              <div class="chat-empty">La conversación aparecerá aquí</div>
-            </div>
-          </div>
-
           <!-- ESCRIBIR -->
           <div class="escribir-area">
             <div class="escribir-label">Escribe al estudiante</div>
@@ -1024,7 +1163,7 @@
             "
           >
             <div class="frases-label">Enviar al estudiante</div>
-            <div class="frases-grid" id="frases-coord"></div>
+            <div id="frases-coord"></div>
           </div>
         </div>
 
@@ -1083,6 +1222,18 @@
       let socket = null;
       let reconocedor;
       let codigoActual = null;
+      let estudiantesConectados = 0;
+
+      // ── Reconexión automática tras refrescar la página ──────────
+      window.addEventListener("DOMContentLoaded", () => {
+        const codigoGuardado = sessionStorage.getItem("sh_codigo_sala_coord");
+        if (codigoGuardado) {
+          codigoActual = codigoGuardado;
+          document.getElementById("sala-screen").style.display = "none";
+          conectarWebSocket();
+          entrarASala();
+        }
+      });
 
       // ── TTS ────────────────────────────────────────────────────
       function hablar(txt) {
@@ -1102,6 +1253,7 @@
           const res = await fetch("/api/crear-sala", { method: "POST" });
           const data = await res.json();
           codigoActual = data.codigo;
+          sessionStorage.setItem("sh_codigo_sala_coord", codigoActual);
           document.getElementById("codigo-display").textContent = codigoActual;
           document.getElementById("codigo-card").style.display = "block";
           document.getElementById("btn-entrar").style.display = "block";
@@ -1116,27 +1268,54 @@
 
       function conectarWebSocket() {
         const proto = location.protocol === "https:" ? "wss:" : "ws:";
-        socket = new WebSocket(`${proto}//${location.host}/ws/coordinador`);
+        // Se manda el código igual por si el backend lo llega a necesitar
+        // para reconectar a la sala correcta (hoy /ws/coordinador lo ignora
+        // si tu backend solo soporta una sala activa a la vez).
+        socket = new WebSocket(
+          `${proto}//${location.host}/ws/coordinador?codigo=${codigoActual || ""}`,
+        );
         socket.onmessage = (event) => {
           const msg = JSON.parse(event.data);
           if (msg.tipo === "codigo_sala") return;
-          if (msg.tipo === "estudiante_conectado") {
-            agregarMsg(msg.contenido);
-            Accesibilidad.pulsoMensajeNuevo();
-            const count =
-              parseInt(document.getElementById("est-count").textContent) + 1;
-            document.getElementById("est-count").textContent = count;
+
+          // El backend manda el conteo real — nada de sumar a ciegas
+          if (msg.tipo === "estado_sala") {
+            estudiantesConectados = msg.conectados;
+            actualizarContadorEstudiantes();
             return;
           }
+          if (msg.tipo === "estudiante_conectado") {
+            estudiantesConectados = msg.conectados;
+            actualizarContadorEstudiantes();
+            
+            Accesibilidad.pulsoMensajeNuevo();
+            return;
+          }
+          if (msg.tipo === "estudiante_desconectado") {
+            estudiantesConectados = msg.conectados;
+            actualizarContadorEstudiantes();
+            
+            return;
+          }
+
           agregarMsg(
             msg.contenido,
             msg.tipo === "frase_rapida" ? "frase" : "estudiante",
             msg.tipo === "frase_rapida" ? "Frase rápida" : "Estudiante",
           );
+          Accesibilidad.pulsoMensajeNuevo();
+          hablar(msg.contenido);
         };
         socket.onclose = () => {
           document.getElementById("chat-sub").textContent = "desconectado";
         };
+      }
+
+      function actualizarContadorEstudiantes() {
+        document.getElementById("est-count").textContent =
+          estudiantesConectados;
+        const miniEl = document.getElementById("est-count-mini");
+        if (miniEl) miniEl.textContent = estudiantesConectados;
       }
 
       function entrarASala() {
@@ -1146,6 +1325,8 @@
         document.getElementById("codigo-mini-val").textContent = codigoActual;
         document.getElementById("topbar-sub").textContent =
           "Sala: " + codigoActual;
+        actualizarContadorEstudiantes();
+        cargarFrasesCoord();
       }
 
       function copiarCodigo() {
@@ -1180,6 +1361,7 @@
           });
       }
 
+      // ── Tabs ─────────────────────────────────────────────────────
       function switchTab(name, btn) {
         document
           .querySelectorAll(".tab-content")
@@ -1201,7 +1383,7 @@
         }
         socket.send(JSON.stringify({ tipo: "texto", contenido: txt }));
         agregarMsg(txt, "coord", "Tú (texto)");
-        hablar(txt);
+
         Accesibilidad.confirmarEnvio("✅ Mensaje enviado");
         document.getElementById("texto-coord").value = "";
       }
@@ -1275,7 +1457,11 @@
       function terminarSesion() {
         if (!confirm("¿Terminar la sesión actual?")) return;
         if (reconocedor) reconocedor.stop();
+        if (socket && socket.readyState === 1) {
+          socket.send(JSON.stringify({ tipo: "terminar_sesion" }));
+        }
         if (socket) socket.close();
+        sessionStorage.removeItem("sh_codigo_sala_coord");
         document.querySelector(".session-pill .dot").style.background =
           "#EF4444";
         document.querySelector(".session-pill span").textContent =
@@ -1284,29 +1470,86 @@
         alert("Sesión terminada. El historial fue guardado.");
       }
 
-      // ── Frases ─────────────────────────────────────────────────
-      const frasesCoord = [
-        "¿Me entiendes?",
-        "Espera un momento",
-        "Muy bien",
-        "Es tu turno",
-        "Te explico de nuevo",
-        "¿Necesitas algo más?",
-      ];
-      const grid = document.getElementById("frases-coord");
-      frasesCoord.forEach((f) => {
-        const btn = document.createElement("button");
-        btn.className = "frase-btn";
-        btn.textContent = f;
-        btn.onclick = () => {
-          if (socket && socket.readyState === 1)
-            socket.send(JSON.stringify({ tipo: "frase_rapida", contenido: f }));
-          agregarMsg(f, "coord", "Tú (frase rápida)");
-          hablar(f);
-          Accesibilidad.confirmarEnvio("✅ Frase enviada");
-        };
-        grid.appendChild(btn);
-      });
+      // ── Frases desde BD ────────────────────────────────────────
+      const ICONOS_CATEGORIA = {
+        Comprensión: "👂",
+        Ritmo: "⏱",
+        Ánimo: "👍",
+        Apoyo: "🤝",
+        General: "💬",
+      };
+
+      function agruparFrasesDesdeApi(frases) {
+        const orden = [];
+        const map = {};
+        frases.forEach((f) => {
+          const cat = f.categoria || "General";
+          if (!map[cat]) {
+            map[cat] = [];
+            orden.push(cat);
+          }
+          map[cat].push(f.contenido);
+        });
+        return orden.map((cat) => ({
+          icon: ICONOS_CATEGORIA[cat] || "💬",
+          titulo: cat,
+          frases: map[cat],
+        }));
+      }
+
+      function toggleFraseCategoria(btn) {
+        const section = btn.closest(".frase-categoria");
+        const accordion = section.parentElement;
+        const yaAbierta = section.classList.contains("abierta");
+        accordion
+          .querySelectorAll(".frase-categoria.abierta")
+          .forEach((s) => s.classList.remove("abierta"));
+        if (!yaAbierta) section.classList.add("abierta");
+      }
+
+      async function cargarFrasesCoord() {
+        try {
+          const res = await fetch("/api/frases-rapidas?dirigida_a=coordinador");
+          if (!res.ok) return;
+          const frases = await res.json();
+          const categorias = agruparFrasesDesdeApi(frases);
+          const container = document.getElementById("frases-coord");
+          container.innerHTML = "";
+          (categorias.length
+            ? categorias
+            : [{ icon: "💬", titulo: "General", frases: ["Sin frases"] }]
+          ).forEach((cat, i) => {
+            const section = document.createElement("div");
+            section.className = "frase-categoria" + (i === 0 ? " abierta" : "");
+            section.innerHTML = `
+        <button type="button" class="frase-cat-header" onclick="toggleFraseCategoria(this)">
+          <span class="frase-cat-icon">${cat.icon}</span>
+          <span class="frase-cat-titulo">${cat.titulo}</span>
+          <span class="frase-cat-chevron">▼</span>
+        </button>
+        <div class="frase-cat-body"><div class="frases-grid"></div></div>`;
+            const grid = section.querySelector(".frases-grid");
+            cat.frases.forEach((texto) => {
+              const btn = document.createElement("button");
+              btn.className = "frase-btn";
+              btn.textContent = texto;
+              btn.onclick = () => {
+                if (socket && socket.readyState === 1)
+                  socket.send(
+                    JSON.stringify({ tipo: "frase_rapida", contenido: texto }),
+                  );
+                agregarMsg(texto, "coord", "Tú (frase rápida)");
+
+                Accesibilidad.confirmarEnvio("✅ Frase enviada");
+              };
+              grid.appendChild(btn);
+            });
+            container.appendChild(section);
+          });
+        } catch (e) {
+          console.error("Error cargando frases:", e);
+        }
+      }
 
       // ── Historial ──────────────────────────────────────────────
       async function cargarHistorial() {

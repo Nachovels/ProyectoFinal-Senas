@@ -12,13 +12,14 @@
     sonido: localStorage.getItem(CLAVE_SONIDO) !== '0',
   };
 
-  // ── Tamaño de fuente ───────────────────────────────────────
+  // ── Tamaño de fuente (zoom) ────────────────────────────────
   const ESCALAS = { normal: '1', grande: '1.15', muygrande: '1.3' };
 
   function aplicarFuente(nivel) {
     estado.fuente = nivel;
     localStorage.setItem(CLAVE_FUENTE, nivel);
-    document.documentElement.style.setProperty('--font-scale', ESCALAS[nivel] || '1');
+    // zoom escala todo el body sin importar si los estilos usan px o rem
+    document.body.style.zoom = ESCALAS[nivel] || '1';
     document.querySelectorAll('.acc-btn-fuente').forEach(b => {
       b.classList.toggle('activo', b.dataset.nivel === nivel);
     });
@@ -135,14 +136,9 @@
       body.modo-accesible .topbar { background: #000 !important; border-bottom: 2px solid #fff !important; }
       body.modo-accesible input,
       body.modo-accesible textarea { background: #111 !important; color: #fff !important; border-color: #fff !important; }
-
-      /* Escala de fuente */
-      :root { --font-scale: 1; }
-      body { font-size: calc(14px * var(--font-scale)); }
     `;
     document.head.appendChild(style);
 
-    // Insertar antes del último elemento del topbar
     topbar.appendChild(wrap);
 
     // Eventos
@@ -169,7 +165,7 @@
       toggleSonido(e.target.checked);
     });
 
-    // Aplicar estado guardado
+    // Aplicar estado guardado al cargar
     aplicarFuente(estado.fuente);
     aplicarContraste(estado.contraste);
   }
