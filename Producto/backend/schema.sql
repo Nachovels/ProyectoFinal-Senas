@@ -1,5 +1,5 @@
 CREATE DATABASE IF NOT EXISTS speaking_hands;
-USE accesclass;
+USE speaking_hands;
 
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
