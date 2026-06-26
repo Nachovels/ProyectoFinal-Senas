@@ -659,9 +659,45 @@
         transform: none;
         border-color: var(--gray-border);
       }
+      .modal-confirmacion-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .modal-confirmacion-box {
+        background: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        max-width: 380px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      }
+      .modal-confirmacion-botones {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .modal-confirmacion-botones button {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-secundario {
+        background: #e0e0e0;
+      }
+      .btn-peligro {
+        background: #e53935;
+        color: #fff;
+      }
     </style>
     <script src="/js/accesibilidad.js"></script>
-</head>
+  </head>
   <body>
     <div class="topbar">
       <div>
@@ -1051,7 +1087,11 @@
         General: "💬",
       };
       const ICONOS_CATEGORIA_COORD = {
-        'Comprensión': '👂', 'Ritmo': '⏱', 'Ánimo': '👍', 'Apoyo': '🤝', 'General': '💬'
+        Comprensión: "👂",
+        Ritmo: "⏱",
+        Ánimo: "👍",
+        Apoyo: "🤝",
+        General: "💬",
       };
 
       function agruparFrases(frases, iconos) {
@@ -1220,9 +1260,38 @@
           c.innerHTML = '<div class="historial-empty">⚠️ Error al cargar</div>';
         }
       }
-      function salirDeSala() {
-        if (!confirm("¿Salir de la sala?")) return;
+      async function salirDeSala() {
+        if (!(await confirmacionPersonalizada("¿Salir de la sala?"))) return;
         salirDeSalaSilencioso();
+      }
+      function confirmacionPersonalizada(mensaje) {
+        return new Promise((resolve) => {
+          const overlay = document.getElementById("modal-confirmacion");
+          const msgEl = document.getElementById("modal-confirmacion-mensaje");
+          const btnOk = document.getElementById("modal-confirmacion-aceptar");
+          const btnCancel = document.getElementById(
+            "modal-confirmacion-cancelar",
+          );
+
+          msgEl.textContent = mensaje;
+          overlay.style.display = "flex";
+
+          function limpiar(resultado) {
+            overlay.style.display = "none";
+            btnOk.removeEventListener("click", onOk);
+            btnCancel.removeEventListener("click", onCancel);
+            resolve(resultado);
+          }
+          function onOk() {
+            limpiar(true);
+          }
+          function onCancel() {
+            limpiar(false);
+          }
+
+          btnOk.addEventListener("click", onOk);
+          btnCancel.addEventListener("click", onCancel);
+        });
       }
 
       function salirDeSalaSilencioso() {
@@ -1240,5 +1309,22 @@
         socket = null;
       }
     </script>
+    <div
+      id="modal-confirmacion"
+      class="modal-confirmacion-overlay"
+      style="display: none"
+    >
+      <div class="modal-confirmacion-box">
+        <p id="modal-confirmacion-mensaje"></p>
+        <div class="modal-confirmacion-botones">
+          <button id="modal-confirmacion-cancelar" class="btn-secundario">
+            Cancelar
+          </button>
+          <button id="modal-confirmacion-aceptar" class="btn-peligro">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
