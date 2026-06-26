@@ -329,6 +329,37 @@
     .salas-toolbar-row {
       display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
     }
+    .modal-confirmacion-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .modal-confirmacion-box {
+       background: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        max-width: 380px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    .modal-confirmacion-botones {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    .modal-confirmacion-botones button {
+       padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-secundario { background: #e0e0e0; }
+    .btn-peligro { background: #e53935; color: #fff; }
   </style>
 </head>
 <body>
@@ -693,7 +724,7 @@ actualizarCategorias(); // llamar al cargar
     }
 
     async function eliminarUsuario(userId) {
-      if (!confirm('¿Eliminar este usuario? Se borrarán también sus salas y mensajes asociados.')) return;
+      if (!(await confirmacionPersonalizada('¿Eliminar este usuario? Se borrarán también sus salas y mensajes asociados.'))) return;
       try {
         const res = await fetch(`/api/admin/usuarios/${userId}`, { method: 'DELETE', headers: authHeaders() });
         let data = {};
@@ -859,7 +890,7 @@ actualizarCategorias(); // llamar al cargar
     }
 
     async function cerrarSala(id) {
-      if (!confirm('¿Forzar cierre de esta sala activa?')) return;
+      if (!(await confirmacionPersonalizada('¿Forzar cierre de esta sala activa?'))) return;
       const res = await fetch(`/api/admin/sesiones/${id}/cerrar`, { method: 'PATCH', headers: authHeaders() });
       const data = await res.json();
       if (res.ok) { showToast(`Sala ${data.codigo} cerrada`); cargarSalas(); cargarAuditoria(); }
@@ -869,7 +900,7 @@ actualizarCategorias(); // llamar al cargar
     async function eliminarSala(id) {
       const sala = todasSalas.find(s => s.id === id);
       const codigo = sala ? sala.codigo : ('#' + id);
-      if (!confirm(`¿Eliminar la sala ${codigo} y todos sus mensajes?`)) return;
+      if (!(await confirmacionPersonalizada(`¿Eliminar la sala ${codigo} y todos sus mensajes?`))) return;
       try {
         const res = await fetch(`/api/admin/sesiones/${id}`, { method: 'DELETE', headers: authHeaders() });
         let data = {};
@@ -905,7 +936,7 @@ actualizarCategorias(); // llamar al cargar
           : filtroSalasEstado === 'finalizada'
             ? `${salas.length} sala(s) finalizada(s)`
             : `${salas.length} sala(s) en total`;
-      if (!confirm(`¿Eliminar ${detalle}? Se borrarán también todos sus mensajes. Esta acción no se puede deshacer.`)) {
+      if (!(await confirmacionPersonalizada(`¿Eliminar ${detalle}? Se borrarán también todos sus mensajes. Esta acción no se puede deshacer.`))) {
         return;
       }
       const btn = document.getElementById('btn-borrar-todas-salas');
@@ -1041,7 +1072,7 @@ actualizarCategorias(); // llamar al cargar
     }
 
     async function eliminarFrase(id) {
-      if (!confirm('¿Eliminar esta frase?')) return;
+      if (!(await confirmacionPersonalizada('¿Eliminar esta frase?'))) return;
       const res = await fetch(`/api/admin/frases/${id}`, { method: 'DELETE', headers: authHeaders() });
       const data = await res.json();
       if (res.ok) { showToast('Frase eliminada'); cancelarEdicionFrase(); cargarFrases(); cargarAuditoria(); }
@@ -1068,6 +1099,29 @@ actualizarCategorias(); // llamar al cargar
         cargarAuditoria();
       } else showToast(data.error, true);
     };
+    function confirmacionPersonalizada(mensaje) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('modal-confirmacion');
+        const msgEl = document.getElementById('modal-confirmacion-mensaje');
+        const btnOk = document.getElementById('modal-confirmacion-aceptar');
+        const btnCancel = document.getElementById('modal-confirmacion-cancelar');
+
+        msgEl.textContent = mensaje;
+        overlay.style.display = 'flex';
+
+        function limpiar(resultado) {
+          overlay.style.display = 'none';
+          btnOk.removeEventListener('click', onOk);
+          btnCancel.removeEventListener('click', onCancel);
+          resolve(resultado);
+      }
+      function onOk() { limpiar(true); }
+      function onCancel() { limpiar(false); }
+
+      btnOk.addEventListener('click', onOk);
+      btnCancel.addEventListener('click', onCancel);
+      });
+    }
 
     // ── Auditoría ──────────────────────────────────────────────
     const ACCION_LABELS = {
@@ -1115,5 +1169,14 @@ actualizarCategorias(); // llamar al cargar
       if (await verificarAcceso()) cargarUsuarios();
     })();
   </script>
+  <div id="modal-confirmacion" class="modal-confirmacion-overlay" style="display:none;">
+  <div class="modal-confirmacion-box">
+    <p id="modal-confirmacion-mensaje"></p>
+    <div class="modal-confirmacion-botones">
+      <button id="modal-confirmacion-cancelar" class="btn-secundario">Cancelar</button>
+      <button id="modal-confirmacion-aceptar" class="btn-peligro">Eliminar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

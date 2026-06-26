@@ -534,6 +534,7 @@ async def admin_eliminar_sesion(sesion_id: int, admin: dict = Depends(requiere_r
             return JSONResponse(status_code=404, content={"error": "Sesión no encontrada."})
         codigo = s.codigo
         db.query(models.Transcripcion).filter_by(sesion_id=sesion_id).delete()
+        db.query(models.Auditoria).filter_by(sesion_id=sesion_id).update({"sesion_id": None})  # ← AQUÍ
         db.delete(s)
         db.commit()
         # No pasamos sesion_id: la sala ya no existe y rompería la
@@ -560,7 +561,9 @@ async def admin_eliminar_sesiones_masivo(ids: Optional[str] = None, estado: Opti
         codigos = [s.codigo for s in sesiones]
         for s in sesiones:
             db.query(models.Transcripcion).filter_by(sesion_id=s.id).delete()
+            db.query(models.Auditoria).filter_by(sesion_id=s.id).update({"sesion_id": None})  # ← AQUÍ
             db.delete(s)
+        db.commit()
         db.commit()
         registrar_auditoria(db, "admin_eliminar_sala",
                              f"{len(sesiones)} sala(s) eliminadas: {', '.join(codigos) if codigos else '-'}",
