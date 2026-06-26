@@ -702,10 +702,12 @@
         <!-- Panel señas -->
         <div class="senas-panel" id="panel-senas">
           <div class="senas-frame">
-            <div class="cam-placeholder">
+            <div class="cam-placeholder" id="cam-placeholder">
               <div class="cam-icon">✋</div>
-              <div class="cam-text">Módulo IA — en desarrollo</div>
+              <div class="cam-text">Módulo IA — Iniciando cámara...</div>
             </div>
+            <video id="video-senas" autoplay playsinline muted style="display: none; width: 100%; height: 100%; object-fit: cover;"></video>
+            <canvas id="canvas-senas" style="display: none;"></canvas>
           </div>
           <div class="senas-bottom">
             <div class="senas-label">Traducción IA</div>
@@ -850,6 +852,31 @@
         socket.onmessage = (event) => {
           const msg = JSON.parse(event.data);
           if (msg.tipo === "codigo_sala") return;
+
+          if (msg.tipo === "frame_ack") {
+            frameProcessing = false;
+            return;
+          }
+
+          if (msg.tipo === "prediccion_sena") {
+            document.getElementById("senaDetectada").textContent = msg.contenido;
+            return;
+          }
+          if (msg.tipo === "estado_ia") {
+            document.getElementById("senaDetectada").textContent = msg.contenido;
+            return;
+          }
+          if (msg.tipo === "traduccion_gemini") {
+            document.getElementById("senaDetectada").textContent = "Esperando señas...";
+            agregarMsg(msg.contenido, "yo", "Tú (IA)");
+            document.getElementById("chat-hora").textContent =
+              new Date().toLocaleTimeString("es-CL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+            return;
+          }
+
           const esCoord =
             msg.tipo === "voz" ||
             msg.tipo === "texto" ||
@@ -901,6 +928,10 @@
         });
         document.getElementById("panel-" + name).classList.add("active");
         btn.classList.add("active");
+
+        if (name === "senas" && !videoStream) {
+          iniciarCamara();
+        }
       }
 
       // ── Frases rápidas ─────────────────────────────────────────
@@ -982,6 +1013,75 @@
         if (txt.trim()) hablar(txt, null);
       }
 
+      // ── Módulo de Señas (IA) ───────────────────────────────────────────────
+      let videoStream = null;
+      let frameInterval = null;
+
+      async function iniciarCamara() {
+        const video = document.getElementById("video-senas");
+        const placeholder = document.getElementById("cam-placeholder");
+        
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              width: { ideal: 640 }, 
+              height: { ideal: 480 },
+              frameRate: { ideal: 30 }
+            } 
+          });
+          video.srcObject = videoStream;
+          video.style.display = "block";
+          placeholder.style.display = "none";
+          
+          iniciarEnvioFrames();
+        } catch (err) {
+          console.error("Error al acceder a la cámara: ", err);
+          placeholder.innerHTML = `<div class="cam-icon" style="color:var(--danger)">❌</div><div class="cam-text">Error de cámara</div>`;
+        }
+      }
+
+      function detenerCamara() {
+        frameProcessing = false;
+        if (videoStream) {
+          videoStream.getTracks().forEach(track => track.stop());
+          videoStream = null;
+        }
+        if (frameInterval) {
+          clearInterval(frameInterval);
+          frameInterval = null;
+        }
+        const video = document.getElementById("video-senas");
+        if (video) video.style.display = "none";
+        const placeholder = document.getElementById("cam-placeholder");
+        if (placeholder) placeholder.style.display = "flex";
+      }
+
+      let frameProcessing = false;
+
+      function iniciarEnvioFrames() {
+        const video = document.getElementById("video-senas");
+        const canvas = document.getElementById("canvas-senas");
+        const ctx = canvas.getContext("2d");
+
+        frameInterval = setInterval(() => {
+          if (socket && socket.readyState === WebSocket.OPEN && video.readyState === video.HAVE_ENOUGH_DATA && !frameProcessing) {
+            frameProcessing = true;
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const base64Data = canvas.toDataURL("image/jpeg", 0.5);
+            const base64Frame = base64Data.split(",")[1];
+            
+            socket.send(JSON.stringify({ 
+              tipo: "video_frame", 
+              contenido: base64Frame 
+            }));
+          }
+        }, 1000 / 30);
+      }
+
       // ── Historial ──────────────────────────────────────────────
       async function cargarHistorial() {
         const c = document.getElementById("historial-container");
@@ -1023,6 +1123,7 @@
       function salirDeSala() {
         if (!confirm("¿Salir de la sala?")) return;
         if (socket) socket.close();
+        detenerCamara();
         document.getElementById("main-content").classList.remove("visible");
         document.getElementById("unirse-screen").style.display = "flex";
         document.getElementById("status-pill").style.display = "none";

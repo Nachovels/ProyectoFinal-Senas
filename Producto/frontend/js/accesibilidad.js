@@ -1,354 +1,240 @@
-/**
- * SpeakingHands — feedback visual y accesible (coordinador / estudiante)
- */
-(function (global) {
-  'use strict';
+// ── SpeakingHands — Accesibilidad y Notificaciones ────────────
+(function () {
 
-  const STORAGE_KEY = 'sh_accesibilidad_v1';
-  const FONT_SCALES = { normal: 1, grande: 1.15, muygrande: 1.32 };
+  // ── Persistencia ───────────────────────────────────────────
+  const CLAVE_FUENTE = 'sh_fuente';
+  const CLAVE_CONTRASTE = 'sh_contraste';
+  const CLAVE_SONIDO = 'sh_sonido';
 
-  let config = {
-    rol: 'estudiante',
-    chatBoxSelector: '.chat-box',
-    bannerEstudiantesId: null,
-    bannerSesionId: null,
-    sonidoHabilitado: false,
+  const estado = {
+    fuente: localStorage.getItem(CLAVE_FUENTE) || 'normal',
+    contraste: localStorage.getItem(CLAVE_CONTRASTE) === '1',
+    sonido: localStorage.getItem(CLAVE_SONIDO) !== '0',
   };
 
-  let settings = cargarSettings();
+  // ── Tamaño de fuente ───────────────────────────────────────
+  const ESCALAS = { normal: '1', grande: '1.15', muygrande: '1.3' };
 
-  function cargarSettings() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return { ...defaults(), ...JSON.parse(raw) };
-    } catch (_) {}
-    return defaults();
-  }
-
-  function defaults() {
-    return {
-      fontSize: 'normal',
-      altoContraste: false,
-      sonidoMensaje: false,
-    };
-  }
-
-  function guardarSettings() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    } catch (_) {}
-  }
-
-  function aplicarSettings() {
-    const scale = FONT_SCALES[settings.fontSize] || 1;
-    document.documentElement.style.setProperty('--font-scale', String(scale));
-    document.body.classList.toggle('modo-accesible', !!settings.altoContraste);
-    document.body.dataset.fontSize = settings.fontSize;
-
-    document.querySelectorAll('.acces-font-btns button').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.size === settings.fontSize);
+  function aplicarFuente(nivel) {
+    estado.fuente = nivel;
+    localStorage.setItem(CLAVE_FUENTE, nivel);
+    document.documentElement.style.setProperty('--font-scale', ESCALAS[nivel] || '1');
+    document.querySelectorAll('.acc-btn-fuente').forEach(b => {
+      b.classList.toggle('activo', b.dataset.nivel === nivel);
     });
-    const chkContraste = document.getElementById('acces-alto-contraste');
-    const chkSonido = document.getElementById('acces-sonido-mensaje');
-    if (chkContraste) chkContraste.checked = !!settings.altoContraste;
-    if (chkSonido) chkSonido.checked = !!settings.sonidoMensaje;
   }
 
-  function asegurarToastRegion() {
-    let region = document.getElementById('sh-toast-region');
-    if (!region) {
-      region = document.createElement('div');
-      region.id = 'sh-toast-region';
-      region.className = 'sh-toast-region';
-      region.setAttribute('aria-live', 'polite');
-      region.setAttribute('aria-atomic', 'true');
-      region.setAttribute('role', 'status');
-      document.body.appendChild(region);
-    }
-    return region;
+  // ── Alto contraste ─────────────────────────────────────────
+  function aplicarContraste(activo) {
+    estado.contraste = activo;
+    localStorage.setItem(CLAVE_CONTRASTE, activo ? '1' : '0');
+    document.body.classList.toggle('modo-accesible', activo);
   }
 
-  function toast(mensaje, esError) {
-    const region = asegurarToastRegion();
-    const el = document.createElement('div');
-    el.className = 'sh-toast' + (esError ? ' error' : '');
-    el.textContent = mensaje;
-    region.appendChild(el);
-    setTimeout(() => el.remove(), 2600);
+  // ── Sonido ─────────────────────────────────────────────────
+  function toggleSonido(activo) {
+    estado.sonido = activo;
+    localStorage.setItem(CLAVE_SONIDO, activo ? '1' : '0');
   }
 
-  function confirmarEnvio(texto) {
-    toast(texto || 'Mensaje enviado');
-  }
-
-  function playNotificacion() {
-    if (!settings.sonidoMensaje || config.rol !== 'coordinador') return;
+  function reproducirBip() {
+    if (!estado.sonido) return;
     try {
-      const Ctx = global.AudioContext || global.webkitAudioContext;
-      if (!Ctx) return;
-      const ctx = new Ctx();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 740;
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
       osc.connect(gain);
       gain.connect(ctx.destination);
+      osc.frequency.value = 520;
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.22);
-      osc.onended = () => ctx.close();
+      osc.stop(ctx.currentTime + 0.25);
     } catch (_) {}
   }
 
-  function pulsoMensajeNuevo(opciones) {
-    opciones = opciones || {};
-    const entrante = opciones.entrante !== false;
-    const box = document.querySelector(config.chatBoxSelector);
-    if (box) {
-      box.classList.remove('msg-nuevo-pulso');
-      void box.offsetWidth;
-      box.classList.add('msg-nuevo-pulso');
-      setTimeout(() => box.classList.remove('msg-nuevo-pulso'), 1400);
-    }
-    if (entrante) playNotificacion();
-  }
-
-  function marcarMsgNuevo(el) {
-    if (!el) return;
-    el.classList.add('msg-nuevo');
-    setTimeout(() => el.classList.remove('msg-nuevo'), 500);
-  }
-
-  function setBannerClasses(banner, estado) {
-    if (!banner) return;
-    banner.classList.remove('conexion-esperando', 'conexion-conectado', 'conexion-desconectado');
-    banner.classList.add('conexion-' + estado);
-  }
-
-  function pulsoBanner(banner) {
-    if (!banner) return;
-    banner.classList.remove('pulso-estado');
-    void banner.offsetWidth;
-    banner.classList.add('pulso-estado');
-    setTimeout(() => banner.classList.remove('pulso-estado'), 1200);
-  }
-
-  function actualizarEstudiantes(opts) {
-    const banner = config.bannerEstudiantesId
-      ? document.getElementById(config.bannerEstudiantesId)
-      : null;
-    if (!banner) return;
-
-    const conectados = typeof opts.conectados === 'number' ? opts.conectados : 0;
-    const nombres = Array.isArray(opts.nombres) ? opts.nombres.filter(Boolean) : [];
-    const tituloEl = banner.querySelector('.conexion-banner-titulo');
-    const detalleEl = banner.querySelector('.conexion-banner-detalle');
-    const badgeEl = banner.querySelector('.conexion-banner-badge');
-    const iconEl = banner.querySelector('.conexion-banner-icon');
-
-    banner.hidden = false;
-    badgeEl.textContent = String(conectados);
-
-    if (conectados > 0) {
-      setBannerClasses(banner, 'conectado');
-      if (iconEl) iconEl.textContent = '\u2705';
-      tituloEl.textContent = conectados === 1
-        ? '1 estudiante conectado'
-        : conectados + ' estudiantes conectados';
-      if (nombres.length) {
-        detalleEl.textContent = nombres.slice(0, 4).join(', ') +
-          (nombres.length > 4 ? '…' : '');
-      } else {
-        detalleEl.textContent = 'En línea en este momento';
-      }
-    } else if (nombres.length > 0) {
-      setBannerClasses(banner, 'desconectado');
-      if (iconEl) iconEl.textContent = '\u26A0\uFE0F';
-      tituloEl.textContent = 'Estudiantes sin conexión';
-      detalleEl.textContent = nombres.join(', ') + ' — registrados, no en línea';
-    } else {
-      setBannerClasses(banner, 'esperando');
-      if (iconEl) iconEl.textContent = '\u23F3';
-      tituloEl.textContent = 'Esperando estudiante';
-      detalleEl.textContent = 'Comparte el código de sala para que se unan';
-    }
-
-    const countLegacy = document.getElementById('est-count');
-    if (countLegacy) countLegacy.textContent = String(conectados);
-  }
-
-  function actualizarSesionEstudiante(opts) {
-    const banner = config.bannerSesionId
-      ? document.getElementById(config.bannerSesionId)
-      : null;
-    if (!banner) return;
-
-    const conectado = !!opts.conectado;
-    const coordinador = opts.coordinador || 'Coordinador';
-    const tituloEl = banner.querySelector('.conexion-banner-titulo');
-    const detalleEl = banner.querySelector('.conexion-banner-detalle');
-    const iconEl = banner.querySelector('.conexion-banner-icon');
-    const badgeEl = banner.querySelector('.conexion-banner-badge');
-
-    banner.hidden = false;
-
-    if (conectado) {
-      setBannerClasses(banner, 'conectado');
-      if (iconEl) iconEl.textContent = '\u2705';
-      tituloEl.textContent = 'Conectado a la sala';
-      detalleEl.textContent = 'Sesión con ' + coordinador;
-      if (badgeEl) badgeEl.textContent = '\u2713';
-    } else {
-      setBannerClasses(banner, 'desconectado');
-      if (iconEl) iconEl.textContent = '\u274C';
-      tituloEl.textContent = 'Desconectado';
-      detalleEl.textContent = 'Intenta unirte de nuevo con el código';
-      if (badgeEl) badgeEl.textContent = '!';
-    }
-
-    pulsoBanner(banner);
-    actualizarPillEstudiante(conectado);
-  }
-
-  function actualizarPillEstudiante(conectado) {
-    const pill = document.getElementById('status-pill');
-    if (!pill) return;
-    const dot = pill.querySelector('.dot');
-    const text = document.getElementById('statusText');
-    pill.style.display = 'flex';
-    if (conectado) {
-      if (dot) dot.style.background = 'var(--success)';
-      if (text) {
-        text.textContent = 'Conectado';
-        text.style.color = 'var(--success)';
-      }
-      pill.style.borderColor = 'rgba(16,185,129,0.45)';
-      pill.style.background = 'rgba(16,185,129,0.2)';
-    } else {
-      if (dot) dot.style.background = 'var(--danger)';
-      if (text) {
-        text.textContent = 'Desconectado';
-        text.style.color = 'var(--danger)';
-      }
-      pill.style.borderColor = 'rgba(239,68,68,0.45)';
-      pill.style.background = 'rgba(239,68,68,0.15)';
-    }
-  }
-
-  function crearToolbar(topbar) {
-    if (!topbar || document.getElementById('acces-toolbar')) return;
+  // ── Toolbar ────────────────────────────────────────────────
+  function crearToolbar() {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
 
     const wrap = document.createElement('div');
-    wrap.className = 'topbar-acces-wrap';
+    wrap.id = 'acc-toolbar';
     wrap.innerHTML = `
-      <div class="acces-toolbar" id="acces-toolbar">
-        <button type="button" class="acces-toggle" id="acces-toggle"
-          aria-expanded="false" aria-controls="acces-panel"
-          title="Opciones de accesibilidad">Aa</button>
-        <div class="acces-panel" id="acces-panel" hidden>
-          <div class="acces-panel-title">Accesibilidad</div>
-          <div class="acces-field">
-            <label>Tamaño de texto</label>
-            <div class="acces-font-btns" role="group" aria-label="Tamaño de texto">
-              <button type="button" data-size="normal" title="Normal">A</button>
-              <button type="button" data-size="grande" title="Grande">A+</button>
-              <button type="button" data-size="muygrande" title="Muy grande">A++</button>
-            </div>
+      <button id="acc-toggle" title="Opciones de accesibilidad" aria-label="Accesibilidad">
+        ♿
+      </button>
+      <div id="acc-panel" hidden>
+        <div class="acc-section">
+          <div class="acc-label">Tamaño de letra</div>
+          <div class="acc-fila">
+            <button class="acc-btn-fuente" data-nivel="normal">A</button>
+            <button class="acc-btn-fuente" data-nivel="grande" style="font-size:1.1em">A</button>
+            <button class="acc-btn-fuente" data-nivel="muygrande" style="font-size:1.25em">A</button>
           </div>
-          <label class="acces-check">
-            <input type="checkbox" id="acces-alto-contraste">
-            <span>Modo alto contraste</span>
-          </label>
-          ${config.rol === 'coordinador' ? `
-          <label class="acces-check" style="margin-top:10px">
-            <input type="checkbox" id="acces-sonido-mensaje">
-            <span>Sonido al recibir mensaje (opcional)</span>
-          </label>` : ''}
         </div>
-      </div>`;
+        <div class="acc-section">
+          <label class="acc-toggle-row">
+            <input type="checkbox" id="acc-contraste" ${estado.contraste ? 'checked' : ''}>
+            <span>Alto contraste</span>
+          </label>
+          <label class="acc-toggle-row">
+            <input type="checkbox" id="acc-sonido" ${estado.sonido ? 'checked' : ''}>
+            <span>Sonido al recibir mensaje</span>
+          </label>
+        </div>
+      </div>
+    `;
 
-    const sessionPill = topbar.querySelector('.session-pill, .status-pill');
-    const btnAbandonar = document.getElementById('btn-abandonar');
-    const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
-    if (sessionPill) {
-      topbar.insertBefore(wrap, sessionPill);
-      if (btnCerrarSesion) wrap.insertBefore(btnCerrarSesion, wrap.firstChild);
-      wrap.appendChild(sessionPill);
-      if (btnAbandonar) wrap.appendChild(btnAbandonar);
-    } else {
-      if (btnCerrarSesion) wrap.insertBefore(btnCerrarSesion, wrap.firstChild);
-      topbar.appendChild(wrap);
-    }
+    // Estilos del toolbar
+    const style = document.createElement('style');
+    style.textContent = `
+      #acc-toolbar { position: relative; }
+      #acc-toggle {
+        background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+        color: white; border-radius: 8px; padding: 6px 10px; font-size: 16px;
+        cursor: pointer; font-family: inherit; transition: background 0.2s;
+      }
+      #acc-toggle:hover { background: rgba(255,255,255,0.22); }
+      #acc-panel {
+        position: absolute; top: calc(100% + 8px); right: 0;
+        background: white; border-radius: 12px; padding: 14px 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18); min-width: 220px; z-index: 999;
+        border: 1px solid #E2E8F0;
+      }
+      #acc-panel[hidden] { display: none; }
+      .acc-section { margin-bottom: 14px; }
+      .acc-section:last-child { margin-bottom: 0; }
+      .acc-label { font-size: 11px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+      .acc-fila { display: flex; gap: 6px; }
+      .acc-btn-fuente {
+        flex: 1; background: #F8FAFC; border: 1.5px solid #E2E8F0;
+        border-radius: 8px; padding: 8px; font-family: inherit; color: #0F2744;
+        cursor: pointer; transition: all 0.15s; font-weight: 600;
+      }
+      .acc-btn-fuente:hover { border-color: #2563EB; color: #2563EB; }
+      .acc-btn-fuente.activo { background: #0F2744; color: white; border-color: #0F2744; }
+      .acc-toggle-row {
+        display: flex; align-items: center; gap: 10px; font-size: 13px;
+        color: #0F172A; cursor: pointer; padding: 6px 0;
+      }
+      .acc-toggle-row input { width: 16px; height: 16px; cursor: pointer; accent-color: #0D9488; }
 
-    const toggle = document.getElementById('acces-toggle');
-    const panel = document.getElementById('acces-panel');
+      /* Alto contraste */
+      body.modo-accesible { background: #000 !important; color: #fff !important; }
+      body.modo-accesible .chat-area,
+      body.modo-accesible .mic-area,
+      body.modo-accesible .escribir-area,
+      body.modo-accesible .chat-principal,
+      body.modo-accesible .unirse-card,
+      body.modo-accesible .sala-card,
+      body.modo-accesible .panel-inferior { background: #111 !important; border-color: #fff !important; }
+      body.modo-accesible .msg.coord { background: #00008B !important; }
+      body.modo-accesible .msg.estudiante,
+      body.modo-accesible .msg.yo { background: #006400 !important; color: #fff !important; border-color: #0f0 !important; }
+      body.modo-accesible .topbar { background: #000 !important; border-bottom: 2px solid #fff !important; }
+      body.modo-accesible input,
+      body.modo-accesible textarea { background: #111 !important; color: #fff !important; border-color: #fff !important; }
 
-    toggle.addEventListener('click', (e) => {
+      /* Escala de fuente */
+      :root { --font-scale: 1; }
+      body { font-size: calc(14px * var(--font-scale)); }
+    `;
+    document.head.appendChild(style);
+
+    // Insertar antes del último elemento del topbar
+    topbar.appendChild(wrap);
+
+    // Eventos
+    document.getElementById('acc-toggle').addEventListener('click', (e) => {
       e.stopPropagation();
-      const open = panel.hidden;
-      panel.hidden = !open;
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      const panel = document.getElementById('acc-panel');
+      panel.hidden = !panel.hidden;
     });
 
     document.addEventListener('click', () => {
-      panel.hidden = true;
-      toggle.setAttribute('aria-expanded', 'false');
-    });
-    panel.addEventListener('click', (e) => e.stopPropagation());
-
-    document.querySelectorAll('.acces-font-btns button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        settings.fontSize = btn.dataset.size || 'normal';
-        guardarSettings();
-        aplicarSettings();
-      });
+      const panel = document.getElementById('acc-panel');
+      if (panel) panel.hidden = true;
     });
 
-    const chkContraste = document.getElementById('acces-alto-contraste');
-    if (chkContraste) {
-      chkContraste.addEventListener('change', () => {
-        settings.altoContraste = chkContraste.checked;
-        guardarSettings();
-        aplicarSettings();
-      });
+    document.querySelectorAll('.acc-btn-fuente').forEach(btn => {
+      btn.addEventListener('click', () => aplicarFuente(btn.dataset.nivel));
+    });
+
+    document.getElementById('acc-contraste').addEventListener('change', (e) => {
+      aplicarContraste(e.target.checked);
+    });
+
+    document.getElementById('acc-sonido').addEventListener('change', (e) => {
+      toggleSonido(e.target.checked);
+    });
+
+    // Aplicar estado guardado
+    aplicarFuente(estado.fuente);
+    aplicarContraste(estado.contraste);
+  }
+
+  // ── Toasts ─────────────────────────────────────────────────
+  let toastContainer = null;
+
+  function toast(mensaje, tipo) {
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'sh-toasts';
+      toastContainer.setAttribute('aria-live', 'polite');
+      document.body.appendChild(toastContainer);
+      const s = document.createElement('style');
+      s.textContent = `
+        #sh-toasts { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 9999; pointer-events: none; max-width: 320px; width: 90%; }
+        .sh-toast { background: #0F2744; color: white; border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: toastIn 0.25s ease; text-align: center; }
+        .sh-toast.exito { background: #0D9488; }
+        .sh-toast.error { background: #EF4444; }
+        @keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes toastOut { from{opacity:1} to{opacity:0} }
+        .sh-toast.saliendo { animation: toastOut 0.3s ease forwards; }
+      `;
+      document.head.appendChild(s);
     }
 
-    const chkSonido = document.getElementById('acces-sonido-mensaje');
-    if (chkSonido) {
-      chkSonido.addEventListener('change', () => {
-        settings.sonidoMensaje = chkSonido.checked;
-        guardarSettings();
-      });
+    const el = document.createElement('div');
+    el.className = 'sh-toast' + (tipo ? ' ' + tipo : '');
+    el.textContent = mensaje;
+    toastContainer.appendChild(el);
+
+    setTimeout(() => {
+      el.classList.add('saliendo');
+      setTimeout(() => el.remove(), 300);
+    }, 2600);
+  }
+
+  // ── Pulso de mensaje nuevo ─────────────────────────────────
+  function pulsoMensajeNuevo() {
+    reproducirBip();
+    const chat = document.querySelector('.chat-messages, #chat-messages, #chat-messages-main');
+    if (!chat) return;
+    chat.classList.remove('pulso-chat');
+    void chat.offsetWidth;
+    chat.classList.add('pulso-chat');
+    setTimeout(() => chat.classList.remove('pulso-chat'), 600);
+
+    const s = document.getElementById('sh-pulso-style');
+    if (!s) {
+      const style = document.createElement('style');
+      style.id = 'sh-pulso-style';
+      style.textContent = `@keyframes pulsochat { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 0 3px rgba(13,148,136,0.35)} } .pulso-chat { animation: pulsochat 0.6s ease; }`;
+      document.head.appendChild(style);
     }
   }
 
-  function setPantallaInicial(esInicial) {
-    const btn = document.getElementById('btn-cerrar-sesion');
-    if (btn) btn.style.display = esInicial ? 'inline-flex' : 'none';
-  }
-
-  function init(opciones) {
-    config = { ...config, ...(opciones || {}) };
-    if (config.rol === 'coordinador') config.sonidoHabilitado = true;
-
-    const topbar = document.querySelector('.topbar');
-    crearToolbar(topbar);
-    aplicarSettings();
-    asegurarToastRegion();
-    setPantallaInicial(true);
-  }
-
-  global.Accesibilidad = {
-    init,
-    setPantallaInicial,
+  // ── API pública ────────────────────────────────────────────
+  window.Accesibilidad = {
+    init() {
+      document.addEventListener('DOMContentLoaded', crearToolbar);
+      if (document.readyState !== 'loading') crearToolbar();
+    },
     toast,
-    confirmarEnvio,
     pulsoMensajeNuevo,
-    marcarMsgNuevo,
-    actualizarEstudiantes,
-    actualizarSesionEstudiante,
-    actualizarPillEstudiante,
+    confirmarEnvio(msg) { toast(msg || '✅ Mensaje enviado', 'exito'); },
   };
-})(window);
+
+})();
