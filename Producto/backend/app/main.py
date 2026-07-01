@@ -1,8 +1,10 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Form
 from fastapi.responses import HTMLResponse, JSONResponse, Response, RedirectResponse
+from fastapi import Header, HTTPException, Depends
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.core.database import engine, Base, SessionLocal
-from app.core.auth import verificar_password, crear_token
+from app.core.auth import verificar_password, crear_token, extraer_bearer, usuario_desde_token, hashear_password
 from app.models import models
 from datetime import datetime
 import json
@@ -28,12 +30,10 @@ class SalaManager:
         self.codigo: str = None
 
     def iniciar_sesion(self, db: Session, coordinador_id: int = None):
-        # Generar código único
         codigo = generar_codigo()
         while db.query(models.Sesion).filter_by(codigo=codigo, finalizada_en=None).first():
             codigo = generar_codigo()
 
-        # Usar coordinador real si viene del login, sino usar demo
         if not coordinador_id:
             coord = db.query(models.Usuario).filter_by(rol_id=2).first()
             if not coord:
@@ -87,6 +87,36 @@ async def root():
 async def index_route():
     return RedirectResponse(url="/login")
 
+# ── Auditoría ────────────────────────────────────────────────────
+def registrar_auditoria(db: Session, accion: str, detalle: str = "",
+                          actor_id: int = None, sesion_id: int = None,
+                          usuario_id: int = None):
+    try:
+        a = models.Auditoria(
+            actor_id=actor_id,
+            accion=accion,
+            detalle=detalle,
+            sesion_id=sesion_id,
+            usuario_id=usuario_id,
+        )
+        db.add(a)
+        db.commit()
+    except Exception:
+        db.rollback()
+
+# ── Auth helpers ───────────────────────────────────────────────
+def requiere_auth(authorization: Optional[str] = Header(None)) -> dict:
+    token = extraer_bearer(authorization)
+    usuario = usuario_desde_token(token)
+    if not usuario:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+    return usuario
+
+def requiere_rol_admin(usuario: dict = Depends(requiere_auth)):
+    if usuario.get("rol") != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores")
+    return usuario
+
 # ── Rutas HTML ─────────────────────────────────────────────────
 @app.get("/login")
 async def login_page():
@@ -102,6 +132,16 @@ async def coordinador_page():
 async def estudiante_page():
     with open("../frontend/templates/estudiante.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
+
+@app.get("/admin")
+async def admin_page():
+    with open("../frontend/templates/admin.html", encoding="utf-8") as f:
+        return HTMLResponse(f.read())
+
+@app.get("/js/accesibilidad.js")
+async def accesibilidad_js():
+    with open("../frontend/js/accesibilidad.js", encoding="utf-8") as f:
+        return Response(content=f.read(), media_type="application/javascript")
 
 # ── API: Login ─────────────────────────────────────────────────
 @app.post("/api/login")
@@ -128,12 +168,18 @@ async def login(email: str = Form(...), password: str = Form(...)):
     finally:
         db.close()
 
+# ── API: Me ────────────────────────────────────────────────────
+@app.get("/api/me")
+async def me(usuario: dict = Depends(requiere_auth)):
+    return {"id": usuario["id"], "nombre": usuario["nombre"], "rol": usuario["rol"]}
+
 # ── API: Crear sala ────────────────────────────────────────────
 @app.post("/api/crear-sala")
 async def crear_sala():
     db = SessionLocal()
     try:
         sesion_id, codigo = sala.iniciar_sesion(db)
+        registrar_auditoria(db, "crear_sala", f"Sala {codigo} creada", sesion_id=sesion_id)
         return {"codigo": codigo, "sesion_id": sesion_id}
     finally:
         db.close()
@@ -186,23 +232,9 @@ async def get_historial():
     finally:
         db.close()
 
-from fastapi import Header, HTTPException, Depends
-from typing import Optional
-from app.core.auth import extraer_bearer, usuario_desde_token
-
-def requiere_auth(authorization: Optional[str] = Header(None)) -> dict:
-    token = extraer_bearer(authorization)
-    usuario = usuario_desde_token(token)
-    if not usuario:
-        raise HTTPException(status_code=401, detail="Token inválido o expirado")
-    return usuario
-
-@app.get("/api/me")
-async def me(usuario: dict = Depends(requiere_auth)):
-    return {"id": usuario["id"], "nombre": usuario["nombre"], "rol": usuario["rol"]}
-
+# ── API: Frases rápidas ────────────────────────────────────────
 @app.get("/api/frases-rapidas")
-async def listar_frases(dirigida_a: Optional[str] = None, usuario: dict = Depends(requiere_auth)):
+async def listar_frases(dirigida_a: Optional[str] = None):
     db = SessionLocal()
     try:
         q = db.query(models.FraseRapida).filter_by(activa=1)
@@ -211,7 +243,7 @@ async def listar_frases(dirigida_a: Optional[str] = None, usuario: dict = Depend
         frases = q.all()
         return [{"id": f.id, "contenido": f.contenido, "dirigida_a": f.dirigida_a, "categoria": f.categoria} for f in frases]
     finally:
-        db.close()        
+        db.close()
 
 # ── WebSocket Coordinador ──────────────────────────────────────
 @app.websocket("/ws/coordinador")
@@ -220,28 +252,58 @@ async def ws_coordinador(websocket: WebSocket):
     sala.coordinador = websocket
     db: Session = SessionLocal()
 
-    # Si no hay sesión activa, crear una
+    # Si no hay sesión activa, crear una. Si ya había una (p. ej. el
+    # coordinador se reconectó tras un refresh), se reutiliza la misma
+    # sesión y el mismo código — ya no se pierde nada.
     if not sala.sesion_id:
         sala.iniciar_sesion(db)
 
-    # Enviar el código al coordinador
+    # Enviar el código de la sala
     await websocket.send_text(json.dumps({
         "tipo": "codigo_sala",
         "contenido": sala.codigo
+    }))
+
+    # Avisar cuántos estudiantes ya están conectados
+    await websocket.send_text(json.dumps({
+        "tipo": "estado_sala",
+        "conectados": len(sala.estudiantes)
     }))
 
     try:
         while True:
             data = await websocket.receive_text()
             msg = json.loads(data)
+
             if msg.get("tipo") == "ping":
                 continue
+
+            if msg.get("tipo") == "terminar_sesion":
+                # Cierre explícito pedido por el coordinador
+                codigo_cerrado = sala.codigo
+                sesion_cerrada_id = sala.sesion_id
+                sala.cerrar_sesion(db)
+                registrar_auditoria(db, "cerrar_sala", f"Sala {codigo_cerrado} cerrada por el coordinador", sesion_id=sesion_cerrada_id)
+                for est in list(sala.estudiantes):
+                    try:
+                        await est.send_text(json.dumps({"tipo": "sesion_finalizada"}))
+                        await est.close()
+                    except Exception:
+                        pass
+                sala.estudiantes.clear()
+                break
+
             sala.guardar_transcripcion(db, msg["contenido"], msg["tipo"])
             for est in sala.estudiantes:
                 await est.send_text(json.dumps(msg))
+
     except WebSocketDisconnect:
-        sala.cerrar_sesion(db)
-        sala.coordinador = None
+        # Refresh del coordinador: NO cerramos la sesión,
+        # se reconecta y retoma el mismo código.
+        pass
+    finally:
+        if sala.coordinador is websocket:
+            sala.coordinador = None
         db.close()
 
 async def procesar_gemini_bg(glosas_a_traducir, ia_translator, websocket, sala, db):
@@ -285,6 +347,18 @@ async def ws_estudiante(websocket: WebSocket, codigo: str):
     except Exception as e:
         print("Error inicializando IA:", e)
         ia_translator = None
+    registrar_auditoria(db, "estudiante_unido", f"Estudiante se unió a la sala {sesion.codigo}", sesion_id=sesion.id)
+
+    # Avisar al coordinador cuántos estudiantes hay ahora
+    if sala.coordinador:
+        try:
+            await sala.coordinador.send_text(json.dumps({
+                "tipo": "estudiante_conectado",
+                "contenido": "Un estudiante se conectó",
+                "conectados": len(sala.estudiantes)
+            }))
+        except Exception:
+            pass
 
     try:
         while True:
@@ -334,8 +408,6 @@ async def admin_page():
         return HTMLResponse(f.read())
 
 # ── Admin: Usuarios ────────────────────────────────────────────
-from app.core.auth import hashear_password
-
 @app.get("/api/admin/usuarios")
 async def admin_listar_usuarios(admin: dict = Depends(requiere_rol_admin)):
     db = SessionLocal()
@@ -365,6 +437,8 @@ async def admin_crear_usuario(
         db.add(u)
         db.commit()
         db.refresh(u)
+        registrar_auditoria(db, "admin_crear_usuario", f"{u.nombre} ({u.email}) - rol {rol_db.nombre}",
+                             actor_id=admin["id"], usuario_id=u.id)
         return {"id": u.id, "nombre": u.nombre, "email": u.email, "rol": rol_db.nombre,
                 "creado_en": u.creado_en.strftime("%d/%m/%Y %H:%M") if u.creado_en else ""}
     finally:
@@ -380,9 +454,14 @@ async def admin_cambiar_rol(user_id: int, rol: str = Form(...), admin: dict = De
         rol_db = db.query(models.Rol).filter_by(nombre=rol.strip().lower()).first()
         if not rol_db:
             return JSONResponse(status_code=400, content={"error": "Rol no válido."})
+        rol_anterior = db.query(models.Rol).filter_by(id=u.rol_id).first()
+        nombre_rol_anterior = rol_anterior.nombre if rol_anterior else "?"
         u.rol_id = rol_db.id
         db.commit()
         db.refresh(u)
+        registrar_auditoria(db, "admin_cambio_rol",
+                             f"{u.nombre} ({u.email}): {nombre_rol_anterior} -> {rol_db.nombre}",
+                             actor_id=admin["id"], usuario_id=u.id)
         return {"id": u.id, "nombre": u.nombre, "email": u.email, "rol": rol_db.nombre,
                 "creado_en": u.creado_en.strftime("%d/%m/%Y %H:%M") if u.creado_en else ""}
     finally:
@@ -397,9 +476,40 @@ async def admin_eliminar_usuario(user_id: int, admin: dict = Depends(requiere_ro
         u = db.query(models.Usuario).filter_by(id=user_id).first()
         if not u:
             return JSONResponse(status_code=404, content={"error": "Usuario no encontrado."})
+        nombre, email, uid = u.nombre, u.email, u.id
+ 
+        # 1. Salas donde este usuario fue coordinador: se borran sus
+        #    mensajes y registros de IA antes de borrar la sala (igual
+        #    que ya hace admin_eliminar_sesion para no romper la FK).
+        sesiones_coordinador = db.query(models.Sesion).filter_by(coordinador_id=user_id).all()
+        for s in sesiones_coordinador:
+            db.query(models.Transcripcion).filter_by(sesion_id=s.id).delete()
+            db.query(models.RegistroIA).filter_by(sesion_id=s.id).delete()
+            db.delete(s)
+ 
+        # 2. Mensajes que este usuario mandó en OTRAS salas (ej. como
+        #    estudiante en una sala de otro coordinador).admin_eliminar_usuario
+        db.query(models.Transcripcion).filter_by(usuario_id=user_id).delete()
+ 
+        # 3. Si quedó registrado como estudiante_id en alguna sesión,
+        #    se desvincula (la sala en sí no se borra).
+        db.query(models.Sesion).filter_by(estudiante_id=user_id).update({"estudiante_id": None})
+ 
+        # 4. Los registros de auditoría hechos por este usuario se
+        #    mantienen (no se borra el historial), solo se "anonimizan"
+        #    quitando el vínculo al usuario que ya no existe.
+        # 4. Los registros de auditoría se mantienen, solo se desvinculan
+        db.query(models.Auditoria).filter_by(actor_id=user_id).update({"actor_id": None})
+        db.query(models.Auditoria).filter_by(usuario_id=user_id).update({"usuario_id": None})
+
         db.delete(u)
         db.commit()
+        registrar_auditoria(db, "admin_eliminar_usuario", f"{nombre} ({email})",
+                     actor_id=admin["id"])  # ← sin usuario_id
         return {"ok": True}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"error": f"No se pudo eliminar el usuario: {str(e)}"})
     finally:
         db.close()
 
@@ -466,6 +576,8 @@ async def admin_cerrar_sesion(sesion_id: int, admin: dict = Depends(requiere_rol
             return JSONResponse(status_code=404, content={"error": "Sesión no encontrada."})
         s.finalizada_en = datetime.now()
         db.commit()
+        registrar_auditoria(db, "admin_cerrar_sala", f"Sala {s.codigo} cerrada por administrador",
+                             actor_id=admin["id"], sesion_id=s.id)
         return {"ok": True, "codigo": s.codigo}
     finally:
         db.close()
@@ -477,16 +589,20 @@ async def admin_eliminar_sesion(sesion_id: int, admin: dict = Depends(requiere_r
         s = db.query(models.Sesion).filter_by(id=sesion_id).first()
         if not s:
             return JSONResponse(status_code=404, content={"error": "Sesión no encontrada."})
+        codigo = s.codigo
         db.query(models.Transcripcion).filter_by(sesion_id=sesion_id).delete()
+        db.query(models.Auditoria).filter_by(sesion_id=sesion_id).update({"sesion_id": None})  # ← AQUÍ
         db.delete(s)
         db.commit()
+        # No pasamos sesion_id: la sala ya no existe y rompería la
+        # foreign key de la tabla auditoria. El código queda en el detalle.
+        registrar_auditoria(db, "admin_eliminar_sala", f"Sala {codigo} eliminada", actor_id=admin["id"])
         return {"ok": True}
     finally:
         db.close()
 
 @app.delete("/api/admin/sesiones")
 async def admin_eliminar_sesiones_masivo(ids: Optional[str] = None, estado: Optional[str] = None, admin: dict = Depends(requiere_rol_admin)):
-    from fastapi import Query as Q
     db = SessionLocal()
     try:
         if ids:
@@ -499,10 +615,16 @@ async def admin_eliminar_sesiones_masivo(ids: Optional[str] = None, estado: Opti
             elif estado == "finalizada":
                 q = q.filter(models.Sesion.finalizada_en.isnot(None))
             sesiones = q.all()
+        codigos = [s.codigo for s in sesiones]
         for s in sesiones:
             db.query(models.Transcripcion).filter_by(sesion_id=s.id).delete()
+            db.query(models.Auditoria).filter_by(sesion_id=s.id).update({"sesion_id": None})  # ← AQUÍ
             db.delete(s)
         db.commit()
+        db.commit()
+        registrar_auditoria(db, "admin_eliminar_sala",
+                             f"{len(sesiones)} sala(s) eliminadas: {', '.join(codigos) if codigos else '-'}",
+                             actor_id=admin["id"])
         return {"ok": True, "eliminadas": len(sesiones)}
     finally:
         db.close()
@@ -531,6 +653,7 @@ async def admin_crear_frase(
         db.add(f)
         db.commit()
         db.refresh(f)
+        registrar_auditoria(db, "admin_crear_frase", f'"{f.contenido}" ({f.dirigida_a})', actor_id=admin["id"])
         return {"id": f.id, "contenido": f.contenido, "dirigida_a": f.dirigida_a,
                 "categoria": f.categoria, "activa": bool(f.activa)}
     finally:
@@ -553,6 +676,7 @@ async def admin_editar_frase(
         f.activa = 1 if activa else 0
         db.commit()
         db.refresh(f)
+        registrar_auditoria(db, "admin_editar_frase", f'"{f.contenido}" ({f.dirigida_a})', actor_id=admin["id"])
         return {"id": f.id, "contenido": f.contenido, "dirigida_a": f.dirigida_a,
                 "categoria": f.categoria, "activa": bool(f.activa)}
     finally:
@@ -565,8 +689,10 @@ async def admin_eliminar_frase(frase_id: int, admin: dict = Depends(requiere_rol
         f = db.query(models.FraseRapida).filter_by(id=frase_id).first()
         if not f:
             return JSONResponse(status_code=404, content={"error": "Frase no encontrada."})
+        contenido = f.contenido
         db.delete(f)
         db.commit()
+        registrar_auditoria(db, "admin_eliminar_frase", f'"{contenido}"', actor_id=admin["id"])
         return {"ok": True}
     finally:
         db.close()
@@ -587,7 +713,3 @@ async def admin_auditoria(accion: Optional[str] = None, admin: dict = Depends(re
                  "creado_en": a.creado_en.strftime("%d/%m/%Y %H:%M") if a.creado_en else ""} for a in registros]
     finally:
         db.close()
-@app.get("/admin")
-async def admin_page():
-    with open("../frontend/templates/admin.html", encoding="utf-8") as f:
-        return HTMLResponse(f.read())        

@@ -24,7 +24,7 @@ class Sesion(Base):
     codigo = Column(String(6), unique=True, index=True)
     iniciada_en = Column(TIMESTAMP, server_default=func.now())
     finalizada_en = Column(TIMESTAMP, nullable=True)
-
+    
 class Transcripcion(Base):
     __tablename__ = "transcripciones"
     id = Column(Integer, primary_key=True, index=True)
@@ -39,7 +39,9 @@ class FraseRapida(Base):
     id = Column(Integer, primary_key=True, index=True)
     contenido = Column(String(255), nullable=False)
     dirigida_a = Column(Enum("coordinador", "estudiante"), nullable=False)
+    categoria = Column(String(50), default="General")
     activa = Column(Integer, default=1)
+
 
 class Sena(Base):
     __tablename__ = "senas"
@@ -49,6 +51,7 @@ class Sena(Base):
     imagen_url = Column(String(255))
     video_url = Column(String(255))
     categoria = Column(Enum("abecedario", "contexto_estudiantil", "general"), nullable=False)
+    creado_en = Column(TIMESTAMP, server_default=func.now())
 
 class RegistroIA(Base):
     __tablename__ = "registros_ia"
@@ -57,3 +60,20 @@ class RegistroIA(Base):
     sena_detectada = Column(String(100))
     confianza = Column(Float)
     creado_en = Column(TIMESTAMP, server_default=func.now())
+
+class Auditoria(Base):
+    __tablename__ = "auditoria"
+    id = Column(Integer, primary_key=True, index=True)
+    actor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    accion = Column(String(50), nullable=False)
+    detalle = Column(Text, nullable=True)
+    sesion_id = Column(Integer, ForeignKey("sesiones.id"), nullable=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    creado_en = Column(TIMESTAMP, server_default=func.now())
+
+class ParticipanteSesion(Base):
+    __tablename__ = "participantes_sesion"
+    id = Column(Integer, primary_key=True, index=True)
+    sesion_id = Column(Integer, ForeignKey("sesiones.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    unido_en = Column(TIMESTAMP, server_default=func.now())    
